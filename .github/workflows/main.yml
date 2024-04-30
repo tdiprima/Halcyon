@@ -64,6 +64,6 @@ jobs:
 
       - name: '📦 Upload macOS Package'
         run: |
-          gh release upload ${{github.event.release.tag_name}} Halcyon/dist/halcyon*.dmg
+          gh release upload ${{github.event.release.tag_name}} Halcyon/dist/Halcyon*.dmg
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
