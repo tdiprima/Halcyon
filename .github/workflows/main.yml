@@ -61,6 +61,8 @@ jobs:
         run: |
           cd Halcyon
           mvn jpackage:jpackage@mac
+          ls -laF
+          ls -laF dist
 
       - name: '📦 Upload macOS Package'
         run: |
