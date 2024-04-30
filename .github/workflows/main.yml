@@ -92,6 +92,7 @@ jobs:
           mvn jpackage:jpackage@win
 
       - name: '📦 Upload Windows Package'
-        run: gh release upload ${{github.event.release.tag_name}} Halcyon\dist\Halcyon*.msi
+        run: gh release upload ${{github.event.release.tag_name}} Halcyon/dist/Halcyon*.msi
+        shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
