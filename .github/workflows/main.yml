@@ -38,34 +38,34 @@ jobs:
           GITHUB_TOKEN: ${{ github.TOKEN }}
         shell: bash
 
-  package-mac:
-    needs: package-ubuntu
-    runs-on: macos-latest
-    steps:
-      - name: Checkout main branch from GitHub
-        uses: actions/checkout@v4
-
-      - name: Set up JDK for Mac
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Download JAR
-        uses: actions/download-artifact@v4
-        with:
-          name: halcyon-jar
-          path: Halcyon/target
-
-      - name: Build macOS package with jpackage
-        run: |
-          cd Halcyon
-          mvn jpackage:jpackage@mac
-
-      - name: '📦 Upload macOS Package'
-        run: gh release upload ${{github.event.release.tag_name}} Halcyon/dist/Halcyon*.dmg
-        env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
+#  package-mac:
+#    needs: package-ubuntu
+#    runs-on: macos-latest
+#    steps:
+#      - name: Checkout main branch from GitHub
+#        uses: actions/checkout@v4
+#
+#      - name: Set up JDK for Mac
+#        uses: actions/setup-java@v4
+#        with:
+#          java-version: '21'
+#          distribution: 'temurin'
+#
+#      - name: Download JAR
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: halcyon-jar
+#          path: Halcyon/target
+#
+#      - name: Build macOS package with jpackage
+#        run: |
+#          cd Halcyon
+#          mvn jpackage:jpackage@mac
+#
+#      - name: '📦 Upload macOS Package'
+#        run: gh release upload ${{github.event.release.tag_name}} Halcyon/dist/Halcyon*.dmg
+#        env:
+#          GITHUB_TOKEN: ${{ github.TOKEN }}
 
   package-windows:
     needs: package-ubuntu
@@ -93,11 +93,11 @@ jobs:
 
       - name: '📦 Upload Windows Package'
         run: |
-          gh release upload ${{github.event.release.tag_name}} Halcyon\dist\Halcyon-1.0.0.msi
-          # $files = Get-ChildItem Halcyon\dist\Halcyon*.msi
-          # foreach ($file in $files) {
-          #   gh release upload ${{github.event.release.tag_name}} $file.FullName
-          # }
+          # gh release upload ${{github.event.release.tag_name}} Halcyon\dist\Halcyon-1.0.0.msi
+          $files = Get-ChildItem Halcyon\dist\Halcyon*.msi
+          foreach ($file in $files) {
+            gh release upload ${{github.event.release.tag_name}} $file.FullName
+          }
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
