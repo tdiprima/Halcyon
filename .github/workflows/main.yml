@@ -61,11 +61,14 @@ jobs:
         run: |
           cd Halcyon
           mvn jpackage:jpackage@mac
+          pwd
           ls -laF
           ls -laF dist
 
       - name: '📦 Upload macOS Package'
         run: |
+          pwd
+          ls -laF
           gh release upload ${{github.event.release.tag_name}} Halcyon/dist/Halcyon*.dmg
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
