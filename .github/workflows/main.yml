@@ -1,9 +1,9 @@
-name: Ubuntu build
+name: Build and Package
 on:
   release:
     types: [created]
 jobs:
-  build:
+  package-ubuntu:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main branch from GitHub
