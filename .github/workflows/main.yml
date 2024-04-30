@@ -4,7 +4,7 @@ on:
     types: [created]
 
 jobs:
-  build-jar:
+  package-ubuntu:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main branch from GitHub
@@ -39,7 +39,7 @@ jobs:
         shell: bash
 
   package-mac:
-    needs: build-jar
+    needs: package-ubuntu
     runs-on: macos-latest
     steps:
       - name: Checkout main branch from GitHub
@@ -68,7 +68,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.TOKEN }}
 
   package-windows:
-    needs: build-jar
+    needs: package-ubuntu
     runs-on: windows-latest
     steps:
       - name: Checkout main branch from GitHub
