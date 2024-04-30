@@ -66,3 +66,32 @@ jobs:
         run: gh release upload ${{github.event.release.tag_name}} Halcyon/dist/Halcyon*.dmg
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
+
+  package-windows:
+    needs: build-jar
+    runs-on: windows-latest
+    steps:
+      - name: Checkout main branch from GitHub
+        uses: actions/checkout@v4
+
+      - name: Set up JDK for Windows
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'adopt'
+
+      - name: Download JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: halcyon-jar
+          path: Halcyon\target
+
+      - name: Build macOS package with jpackage
+        run: |
+          cd Halcyon
+          mvn jpackage:jpackage@win
+
+      - name: '📦 Upload Windows Package'
+        run: gh release upload ${{github.event.release.tag_name}} Halcyon\dist\Halcyon*.msi
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
