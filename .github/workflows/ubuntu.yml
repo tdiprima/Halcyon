@@ -18,13 +18,6 @@ jobs:
       - name: Build Maven Project
         run: mvn -B package --file pom.xml
 
-      - name: Set up a cache for Maven
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
       - name: Build Ubuntu package
         run: |
           cd Halcyon
@@ -33,16 +26,7 @@ jobs:
       - name: '📦 Upload Package'
         run: |
           gh release upload ${{github.event.release.tag_name}} Halcyon/target/Halcyon*.jar
-          gh release upload ${{github.event.release.tag_name}} /home/runner/work/Halcyon/Halcyon/Halcyon/dist/halcyon*.deb
+          gh release upload ${{github.event.release.tag_name}} Halcyon/dist/halcyon*.deb
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
         shell: bash
-
-      - name: List directory
-        run: |
-          cd Halcyon
-          pwd
-          ls -laF
-          cd Halcyon
-          pwd
-          ls -laF
