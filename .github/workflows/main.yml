@@ -20,7 +20,7 @@ jobs:
         run: mvn -B package --file pom.xml
 
       - name: Upload JAR
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: halcyon-jar
           path: Halcyon/target/Halcyon*.jar
@@ -52,7 +52,7 @@ jobs:
           distribution: 'adopt'
 
       - name: Download JAR
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: halcyon-jar
           path: Halcyon/target
