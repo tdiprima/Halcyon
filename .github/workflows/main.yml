@@ -55,7 +55,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: halcyon-jar
-          path: target
+          path: Halcyon/target
 
       - name: Build macOS package with jpackage
         run: |
