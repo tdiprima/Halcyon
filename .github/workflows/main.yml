@@ -86,7 +86,7 @@ jobs:
           name: halcyon-jar
           path: Halcyon\target
 
-      - name: Build macOS package with jpackage
+      - name: Build Windows package with jpackage
         run: |
           cd Halcyon
           mvn jpackage:jpackage@win
