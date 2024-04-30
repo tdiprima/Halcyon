@@ -39,7 +39,7 @@ jobs:
       - name: '📦 Upload Package'
         run: |
           gh release upload ${{github.event.release.tag_name}} Halcyon/target/Halcyon*.jar
-          gh release upload ${{github.event.release.tag_name}} Halcyon/Halcyon/dist/Halcyon*.deb
+          gh release upload ${{github.event.release.tag_name}} Halcyon/Halcyon/dist/halcyon*.deb
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
         shell: bash
