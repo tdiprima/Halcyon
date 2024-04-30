@@ -2,14 +2,15 @@ name: Build and Package
 on:
   release:
     types: [created]
+
 jobs:
-  package-ubuntu:
+  build-jar:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main branch from GitHub
         uses: actions/checkout@v4
 
-      - name: Set up JDK
+      - name: Set up JDK for Ubuntu
         uses: actions/setup-java@v4
         with:
           java-version: '21'
@@ -18,7 +19,13 @@ jobs:
       - name: Build Maven Project
         run: mvn -B package --file pom.xml
 
-      - name: Build Ubuntu package
+      - name: Upload JAR
+        uses: actions/upload-artifact@v3
+        with:
+          name: halcyon-jar
+          path: Halcyon/target/Halcyon*.jar
+
+      - name: Build Ubuntu package with jpackage
         run: |
           cd Halcyon
           mvn jpackage:jpackage@ubuntu
@@ -30,3 +37,33 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
         shell: bash
+
+  package-mac:
+    needs: build-jar
+    runs-on: macos-latest
+    steps:
+      - name: Checkout main branch from GitHub
+        uses: actions/checkout@v4
+
+      - name: Set up JDK for Mac
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'adopt'
+
+      - name: Download JAR
+        uses: actions/download-artifact@v3
+        with:
+          name: halcyon-jar
+          path: target
+
+      - name: Build macOS package with jpackage
+        run: |
+          cd Halcyon
+          mvn jpackage:jpackage@mac
+
+      - name: '📦 Upload macOS Package'
+        run: |
+          gh release upload ${{github.event.release.tag_name}} Halcyon/dist/halcyon*.dmg
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
