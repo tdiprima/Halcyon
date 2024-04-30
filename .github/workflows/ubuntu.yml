@@ -30,16 +30,19 @@ jobs:
           cd Halcyon
           mvn package jpackage:jpackage@ubuntu
 
-      - name: List directory
-        run: |
-          pwd
-          ls -laF
-          cd ..
-
       - name: '📦 Upload Package'
         run: |
           gh release upload ${{github.event.release.tag_name}} Halcyon/target/Halcyon*.jar
-          gh release upload ${{github.event.release.tag_name}} Halcyon/Halcyon/dist/halcyon*.deb
+          gh release upload ${{github.event.release.tag_name}} /home/runner/work/Halcyon/Halcyon/Halcyon/dist/halcyon_1.0.0_amd64.deb
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
         shell: bash
+
+      - name: List directory
+        run: |
+          cd Halcyon
+          pwd
+          ls -laF
+          cd Halcyon
+          pwd
+          ls -laF
