@@ -17,7 +17,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build Maven Project
-        run: mvn -B package --file pom.xml
+        run: mvn package --file pom.xml
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
