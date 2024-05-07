@@ -22,7 +22,7 @@ jobs:
         with:
           servers: |
             [{
-              "id": "reposilite-repository",
+              "id": "halcyon",
               "username": "${{ secrets.MAVEN_NAME }}",
               "password": "${{ secrets.MAVEN_SECRET }}"
             }]
