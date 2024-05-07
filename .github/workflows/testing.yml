@@ -14,7 +14,12 @@ jobs:
       - name: Build Maven Project
         run: mvn -B package --file pom.xml
       - name: Publish with Maven
+        uses: s4u/maven-settings-action@v2.6.0
+        with:
+          servers: |
+            [{
+              "id": "reposilite-repository",
+              "username": "${{ secrets.MAVEN_NAME }}",
+              "password": "${{ secrets.MAVEN_SECRET }}"
+            }]
         run: mvn deploy
-        env:
-          MAVEN_NAME: ${{ secrets.MAVEN_NAME }} # token name
-          MAVEN_SECRET: ${{ secrets.MAVEN_SECRET }} # token secret (password)
