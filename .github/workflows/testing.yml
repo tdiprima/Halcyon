@@ -1,0 +1,19 @@
+name: Publish project to Maven repository
+# Publish manually
+on: workflow_dispatch
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+      - name: Build Maven Project
+        run: mvn -B package --file pom.xml
+      - name: Publish with Maven
+        run: mvn deploy
+        env:
+          MAVEN_NAME: ${{ secrets.MAVEN_NAME }} # token name
+          MAVEN_SECRET: ${{ secrets.MAVEN_SECRET }} # token secret (password)
