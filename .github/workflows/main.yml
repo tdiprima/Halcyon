@@ -1,11 +1,8 @@
 name: Build, Package, Deploy
 
-# on:
-#   release:
-#     types: [created]
-
 on:
-  workflow_dispatch:
+  release:
+    types: [created]
 
 jobs:
   package-ubuntu:
