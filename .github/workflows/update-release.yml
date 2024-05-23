@@ -37,10 +37,25 @@ jobs:
           EOF
 
       - name: Update release with notes
-        id: update_release
-        uses: oktapodia/update-release@v1
+#        id: update_release
+#        uses: oktapodia/update-release@v1
+#        with:
+##          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          github_token: ${{ github.TOKEN }}
+#          release_id: ${{ github.event.release.id }}
+#          body_path: release_notes.md
+        uses: actions/github-script@v6
         with:
-          # github_token: ${{ secrets.GITHUB_TOKEN }}
-          github_token: ${{ github.TOKEN }}
-          release_id: ${{ github.event.release.id }}
-          body_path: release_notes.md
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ github.TOKEN }}
+          script: |
+            const fs = require('fs');
+            const releaseNotes = fs.readFileSync('release_notes.md', 'utf8');
+            const releaseId = context.payload.release.id;
+
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: releaseId,
+              body: releaseNotes
+            });
