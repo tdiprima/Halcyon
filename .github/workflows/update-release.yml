@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Ensure the full history is fetched
 
       - name: Set up JQ
         run: sudo apt-get install jq
@@ -44,6 +46,9 @@ jobs:
           ### Changes
           $changelog
           EOF
+
+          # Display the generated release notes for debugging
+          cat release_notes.md
 
       - name: Update release with notes
 #        id: update_release
