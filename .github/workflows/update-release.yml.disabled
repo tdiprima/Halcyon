@@ -50,7 +50,6 @@ jobs:
       - name: Update release with notes
         uses: actions/github-script@v7
         with:
-#          github-token: ${{ secrets.GITHUB_TOKEN }}
           github-token: ${{ github.TOKEN }}
           script: |
             const fs = require('fs');
