@@ -19,8 +19,9 @@ import java.util.ArrayList;
 public class FileReaderFactoryProvider {
 
     private static final Map<String, FileReaderFactory> readersMap = new HashMap<>();
+    private static FileReaderFactoryProvider frfp = null;
 
-    public FileReaderFactoryProvider(ClassLoader loader) {
+    private FileReaderFactoryProvider(ClassLoader loader) {
         ServiceLoader<FileReaderFactory> loaders = ServiceLoader.load(FileReaderFactory.class, loader);
         for (FileReaderFactory reader : loaders) {
             reader.getSupportedFormats().forEach(f->{
@@ -60,7 +61,13 @@ public class FileReaderFactoryProvider {
             Logger.getLogger(FileReaderFactoryProvider.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
+    public static void init(ClassLoader loader) {
+        if (frfp==null) {
+            frfp = new FileReaderFactoryProvider(loader);
+        }
+    }
+    
     public static boolean contains(String format) {
         return readersMap.containsKey(format);
     }
@@ -74,10 +81,10 @@ public class FileReaderFactoryProvider {
     }
     
     public static FileReaderFactory getReaderForFormat(Resource iri) {
-        //System.out.println(iri.getURI());
-        //readersMap.forEach((k,v)->{
-          //  System.out.println("reader --> "+k+"  "+v.getClass().toGenericString());
-        //});      
+        System.out.println(iri.getURI());
+        readersMap.forEach((k,v)->{
+            System.out.println("reader --> "+k+"  "+v.getClass().toGenericString());
+        });      
         return getReaderForFormat(FileUtils.getExtension(iri.getURI()));
     }
     

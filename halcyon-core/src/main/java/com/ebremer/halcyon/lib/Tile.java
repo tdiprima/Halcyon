@@ -3,9 +3,13 @@ package com.ebremer.halcyon.lib;
 import com.ebremer.halcyon.utils.HalJsonLD;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.IIOImage;
@@ -29,6 +33,10 @@ public class Tile {
     private byte[] jpg = null;
     private byte[] png = null;
     private Model meta = null;
+    
+    public TileRequest getTileRequest() {
+        return this.tilerequest;
+    }
     
     public Tile(TileRequest tilerequest, BufferedImage bi) {
         this.tilerequest = tilerequest;
@@ -113,5 +121,16 @@ public class Tile {
             }
         }
         return png;
+    }
+    
+    public boolean Write(Path path) {
+        path.toFile().mkdirs();
+        Path file = Path.of(path.toString(), "tile-"+tilerequest.getRegion().getX()+"-"+tilerequest.getRegion().getY()+"-"+tilerequest.getRegion().getWidth()+"-"+tilerequest.getRegion().getHeight()+".png");
+        try (FileOutputStream fos = new FileOutputStream(file.toFile())) {
+            return ImageIO.write(getBufferedImage(), "png", fos);
+        } catch (IOException ex) {
+            Logger.getLogger(Tile.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
     }
 }

@@ -81,7 +81,7 @@ function Square(renderer, src, offset, name) {
   square.lineTo(1, 0);
   const geometry = new ShapeGeometry(square);
   geometry.center();
-  const textureMaterial = new MeshBasicMaterial({map: texture, depthWrite: false, side: DoubleSide, transparent: true});
+  const textureMaterial = new MeshBasicMaterial({map: texture, depthWrite: false, side: DoubleSide});
   
   /*
   var material;

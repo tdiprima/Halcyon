@@ -5,10 +5,10 @@ import org.pac4j.core.client.Clients;
 import org.pac4j.core.config.Config;
 import org.pac4j.jee.filter.CallbackFilter;
 import org.pac4j.jee.filter.LogoutFilter;
-import org.pac4j.jee.util.Pac4jProducer;
 import org.pac4j.oidc.client.KeycloakOidcClient;
 import org.pac4j.oidc.config.KeycloakOidcConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ssl.DefaultSslBundleRegistry;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,9 +21,9 @@ import org.springframework.core.Ordered;
 
 @Configuration
 public class Cool {
-
-//    @Autowired
-//    private Config config;
+    
+    @Autowired
+    private DefaultSslBundleRegistry defaultSslBundleRegistry;
     
     @Bean
     public HalcyonSecurityFilter securityFilter(Config pac4jConfig) {
@@ -44,11 +44,14 @@ public class Cool {
         final KeycloakOidcConfiguration keyconfig = new KeycloakOidcConfiguration();
         keyconfig.setClientId("account");
         keyconfig.setRealm("Halcyon");
+        keyconfig.setConnectTimeout(10000);
+        keyconfig.setReadTimeout(10000);    
         keyconfig.setBaseUri(HalcyonSettings.getSettings().getAuthServer()+"/auth");
         if (HalcyonSettings.getSettings().isHTTPS2enabled()) {
-            keyconfig.setSslSocketFactory(SslConfig.getSslContext().getSocketFactory());
+            keyconfig.setSslSocketFactory(defaultSslBundleRegistry.getBundle("server").createSslContext().getSocketFactory());
         }
         KeycloakOidcClient keycloakclient = new KeycloakOidcClient(keyconfig);
+        System.out.println("HACK : "+keycloakclient);
         final Clients clients = new Clients(HalcyonSettings.getSettings().getProxyHostName()+"/callback", keycloakclient);
         return new Config(clients);
     }    
@@ -87,6 +90,7 @@ public class Cool {
         registration.setName("KeycloakOidcClient");
         registration.addUrlPatterns(
                 "/ldp*",
+                "/blank",
                 "/skunkworks/yay",
                 "/f*",
                 "/callback",
@@ -98,11 +102,5 @@ public class Cool {
         );
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 1); // Order just after CallbackFilter
         return registration;
-    }
-        
-    @Bean
-    public Pac4jProducer pac4jProducer() {
-        Pac4jProducer producer = new Pac4jProducer();
-        return producer;
     }
 }

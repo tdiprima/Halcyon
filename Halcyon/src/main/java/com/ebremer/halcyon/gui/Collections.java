@@ -8,7 +8,6 @@ import com.ebremer.halcyon.wicket.DatabaseLocator;
 import com.ebremer.ethereal.NodeColumn;
 import com.ebremer.halcyon.data.DataCore;
 import com.ebremer.halcyon.datum.HalcyonFactory;
-import com.ebremer.halcyon.gui.tree.NodeNestedTreePage;
 import com.ebremer.halcyon.wicket.Upload;
 import com.ebremer.ns.HAL;
 import com.ebremer.ns.LDP;
@@ -80,6 +79,7 @@ public class Collections extends BasePage {
         add(new AjaxFallbackDefaultDataTable<>("table", columns, rdfsdf,35)); 
         
         Button button = new Button("newCollection");
+        button.setVisible(false);
         button.add(new AjaxEventBehavior("click") {
             @Override
             protected void onEvent(AjaxRequestTarget target) {
@@ -93,10 +93,10 @@ public class Collections extends BasePage {
                 ParameterizedSparqlString pss = new ParameterizedSparqlString(
                         """
                         insert {
-                            graph ?g {?s a so:Collection}
+                            graph ?g {?s a ldp:Container}
                         }
                         where {
-                            graph ?s {?s a so:Collection}
+                            graph ?s {?s a ldp:Container}
                         }
                         """
                 );                                                              

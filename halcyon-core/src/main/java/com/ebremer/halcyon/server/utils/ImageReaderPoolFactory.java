@@ -10,6 +10,8 @@ import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
 import org.apache.commons.pool2.DestroyMode;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -19,20 +21,26 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
  */
 public class ImageReaderPoolFactory<K, V> extends BaseKeyedPooledObjectFactory<URI, ImageReader> {
     
+    private static final Logger logger = LoggerFactory.getLogger(ImageReaderPoolFactory.class);
+    
     public ImageReaderPoolFactory() {}
     
     @Override
     public ImageReader create(URI uri) throws Exception {
+        logger.debug("creating "+uri);
         String getthis;
         Optional<URI> x = PathMapper.getPathMapper().http2file(uri);
         if (x.isPresent()) {
             getthis = x.get().getPath().replace("%20", " ");
         } else if ((uri.getScheme().equals("https")||uri.getScheme().equals("http"))) {
             throw new Error("remote http access being added back in.  Not available at the moment : "+uri.toString());
+        } else if (uri.getScheme().equals("file")) {
+            getthis = uri.getPath().substring(1);
         } else {
             getthis = uri.toString();
         }
         URI xuri = (new File(getthis)).toURI();
+        logger.debug("translated "+xuri);
         switch (xuri.getScheme()) {
             case "file":
                 String ext = FileUtils.getExtension(getthis);

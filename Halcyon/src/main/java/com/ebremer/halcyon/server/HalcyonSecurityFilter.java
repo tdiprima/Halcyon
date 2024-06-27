@@ -16,13 +16,11 @@ import org.pac4j.core.util.security.SecurityEndpointBuilder;
 import org.pac4j.jee.config.AbstractConfigFilter;
 import org.pac4j.jee.context.JEEFrameworkParameters;
 import java.io.IOException;
-import org.pac4j.core.resource.SpringResourceHelper;
 
 /**
  * <p>This filter protects an URL.</p>
  *
- * @author Jerome Leleu, Michael Remond
- * @since 1.0.0
+ * @author Erich Bremer
  */
 @Getter
 @Setter
@@ -66,14 +64,6 @@ public class HalcyonSecurityFilter extends AbstractConfigFilter implements Secur
         this.matchers = getStringParam(filterConfig, Pac4jConstants.MATCHERS, this.matchers);
     }
 
-    /**
-     *
-     * @param request
-     * @param response
-     * @param filterChain
-     * @throws IOException
-     * @throws ServletException
-     */
     @Override
     protected final void internalFilter( final HttpServletRequest request, final HttpServletResponse response, final FilterChain filterChain ) throws IOException, ServletException {
         val config = getSharedConfig();

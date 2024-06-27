@@ -36,7 +36,9 @@ public final class FileManager implements Service {
     public FileManager() {
         logger.info("Starting FileManager...");
         hs = HalcyonSettings.getSettings();
-        resume();
+        if (!hs.IsFileScanDisabled()) {
+            resume();
+        }
     }
     
     public void pause() {
@@ -50,7 +52,7 @@ public final class FileManager implements Service {
             public void run() {
                 pause();
                 Dataset ds = DataCore.getInstance().getDataset();
-                DirectoryProcessor dp = new DirectoryProcessor(ds);                
+                DirectoryProcessor dp = new DirectoryProcessor(ds,hs.GetNumberOfFileProcessorThreads());
                 List<ResourceHandler> list = HalcyonSettings.getSettings().GetResourceHandlers();
                 list.forEach(rh->{
                     Path p = Path.of(rh.resourceBase());

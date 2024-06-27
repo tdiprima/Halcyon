@@ -29,15 +29,13 @@ import org.springframework.core.annotation.Order;
 import com.ebremer.halcyon.fuseki.HalcyonProxyServlet;
 import com.ebremer.halcyon.fuseki.SPARQLEndPoint;
 import com.ebremer.halcyon.lib.spatial.Spatial;
-import com.ebremer.halcyon.server.ldp.LDP;
+import com.ebremer.halcyon.server.ldp.LDPServer;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.Servlet;
+import java.util.Iterator;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import javax.net.ssl.SSLSocketFactory;
-//import javax.sql.DataSource;
-import org.keycloak.federation.sssd.SSSDFederationProviderFactory;
+import javax.imageio.ImageIO;
+import javax.sql.DataSource;
 import org.mitre.dsmiley.httpproxy.ProxyServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +45,11 @@ import org.pac4j.oidc.client.KeycloakOidcClient;
 import org.pac4j.oidc.config.KeycloakOidcConfiguration;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.ssl.DefaultSslBundleRegistry;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 @SpringBootApplication(exclude = LiquibaseAutoConfiguration.class)
 @Import( {KeycloakServer.class})
@@ -59,23 +60,23 @@ public class Main {
     private final KeycloakServer properties;
     
     @Autowired
+    private DefaultSslBundleRegistry defaultSslBundleRegistry;
+        
+    @Autowired
     private KeycloakOidcConfiguration keycloakOidcConfiguration;
         
     @Autowired
     public Main(KeycloakServer properties) {
         this.properties = properties;
-        SSSDFederationProviderFactory ha;
         KeycloakProperties.getInstance(properties.getContextPath(), properties.getUsername(), properties.getPassword());
     }
 
-    //@Autowired
-    //private DataSource dataSource;
+    @Autowired
+    private DataSource dataSource;
     
     @PostConstruct
     public void init() {
-        // Remove existing handlers attached to j.u.l root logger
         SLF4JBridgeHandler.removeHandlersForRootLogger();
-        // Add SLF4JBridgeHandler to j.u.l's root logger
         SLF4JBridgeHandler.install();
     }
     
@@ -93,6 +94,11 @@ public class Main {
         servlet.setLoadOnStartup(0);
         servlet.setAsyncSupported(true);
         return servlet;
+    }
+    
+    @Bean
+    MultipartResolver multipartResolver() {
+        return new StandardServletMultipartResolver();
     }
     
     @Bean(name = "keycloakSessionManagement")
@@ -114,8 +120,7 @@ public class Main {
         config.setRealm("Halcyon");
         config.setBaseUri(HalcyonSettings.getSettings().getProxyHostName()+"/auth");  
         if (HalcyonSettings.getSettings().isHTTPS2enabled()) {
-            SSLSocketFactory sf = SslConfig.getSslContext().getSocketFactory();
-            config.setSslSocketFactory(sf);
+            config.setSslSocketFactory(defaultSslBundleRegistry.getBundle("server").createSslContext().getSocketFactory());
         }
         return config;
     }
@@ -123,12 +128,6 @@ public class Main {
     @Bean
     public KeycloakOidcClient keycloakOidcClient() {
         return new KeycloakOidcClient(keycloakOidcConfiguration);
-    }
-
-    @Bean("fixedThreadPool")
-    @Order(Ordered.HIGHEST_PRECEDENCE)	
-    ExecutorService fixedThreadPool() {
-        return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
     @Bean
@@ -186,9 +185,14 @@ public class Main {
         i.init();
         DataCore.getInstance();
         SPARQLEndPoint.getSPARQLEndPoint();
-        ServicesLoader halcyonServiceLoader = new ServicesLoader();
-        ClassLoader loader = Main.class.getClassLoader();
-        FileReaderFactoryProvider frf = new FileReaderFactoryProvider(loader);
+        //ServicesLoader halcyonServiceLoader = new ServicesLoader();       
+        ServicesLoader.init();
+        FileReaderFactoryProvider.init(Main.class.getClassLoader());
+        Iterator<javax.imageio.ImageReader> readers = ImageIO.getImageReadersByFormatName("tif");
+        readers.forEachRemaining(rr->{
+            System.out.println("MAIN LOAD TIF READERS : "+rr.getClass().toGenericString());
+        });
+        
         Spatial.init();
         SpringApplicationBuilder sab = new SpringApplicationBuilder(Main.class);
         sab.initializers(new ServletInitializer());
@@ -212,7 +216,7 @@ public class Main {
                 srb.addInitParameter("resourceBase", rh.resourceBase().getPath().substring(1));
                 srb.addInitParameter("dirAllowed", "true");
                 System.out.println("Add Path --> "+rh.urlPath()+"  "+rh.resourceBase().getPath().substring(1));
-                srb.setServlet(new LDP());
+                srb.setServlet(new LDPServer());
                 srb.setUrlMappings(Arrays.asList(rh.urlPath()+"*"));
                 applicationContext.getBeanFactory().registerSingleton(name, srb);
             });
