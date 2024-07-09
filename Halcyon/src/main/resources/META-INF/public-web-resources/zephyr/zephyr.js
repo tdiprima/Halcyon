@@ -73,7 +73,7 @@ function Square(renderer, src, offset, name) {
   //texture.generateMipmaps = false;
   //var maxAnisotropy = renderer.capabilities.anisotropy;
   //texture.anisotropy = maxAnisotropy;  
-  //texture.colorSpace = SRGBColorSpace;
+  texture.colorSpace = SRGBColorSpace;
   const square = new Shape();
   square.moveTo(0, 0);
   square.lineTo(0, 1);
@@ -81,7 +81,7 @@ function Square(renderer, src, offset, name) {
   square.lineTo(1, 0);
   const geometry = new ShapeGeometry(square);
   geometry.center();
-  const textureMaterial = new MeshBasicMaterial({map: texture, depthWrite: false, side: DoubleSide, transparent: true});
+  const textureMaterial = new MeshBasicMaterial({map: texture, depthWrite: false, side: DoubleSide});
   
   /*
   var material;
@@ -93,7 +93,7 @@ function Square(renderer, src, offset, name) {
       case "SE": material = new MeshBasicMaterial({ color: 0xffff00 }); break;
       default:   material = new MeshBasicMaterial({ color: 0xffffff }); break;
   }*/
-  //texture.colorSpace = SRGBColorSpace;
+  texture.colorSpace = SRGBColorSpace;
   const X = new Mesh(geometry, textureMaterial);
   //X.scale.x = 1;
   //X.scale.y = 1;
