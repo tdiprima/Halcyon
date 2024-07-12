@@ -1,23 +1,35 @@
 import * as THREE from "three";
-import { createButton, textInputPopup, turnOtherButtonsOff } from "../helpers/elements.js";
+import { createButton, textInputPopup, turnOtherButtonsOff, displayAreaAndPerimeter } from "./elements.js";
+import {calculatePolygonArea, calculatePolygonPerimeter} from "./conversions.js"
 
-export function label(scene, camera, renderer, controls, originalZ) {
-  const labelBtn = createButton({
-    id: "label",
-    innerHtml: "<i class=\"fas fa-tag\"></i>",
-    title: "Label"
-  });
+// Label or area and perimeter
+export function label(scene, camera, renderer, controls, originalZ, type) {
+  let button;
+
+  if (type === "label") {
+    button = createButton({
+      id: "label",
+      innerHtml: "<i class=\"fas fa-tag\"></i>",
+      title: "Label"
+    });
+  } else {
+    button = createButton({
+      id: "area",
+      innerHtml: "<i class=\"fa fa-area-chart\"></i>",
+      title: "Area and Perimeter"
+    });
+  }
 
   let clicked = false;
   let mouse = new THREE.Vector2();
   let raycaster = new THREE.Raycaster();
   let objects = [];
 
-  labelBtn.addEventListener("click", function () {
+  button.addEventListener("click", function () {
     clicked = !clicked;
     if (clicked) {
       // alert("on!");
-      turnOtherButtonsOff(labelBtn);
+      turnOtherButtonsOff(button);
       controls.enabled = false;
       this.classList.replace('annotationBtn', 'btnOn');
       getAnnotationObjects();
@@ -64,7 +76,19 @@ export function label(scene, camera, renderer, controls, originalZ) {
         // intersects.sort((a, b) => a.distance - b.distance);
         const selectedMesh = intersects[0].object;
         // console.log("selectedMesh", selectedMesh);
-        textInputPopup(event, selectedMesh);
+
+        if (type === "label") {
+          textInputPopup(event, selectedMesh);
+        } else {
+          // Calculate area and perimeter
+          let currentPolygonPositions = selectedMesh.geometry.attributes.position.array;
+          const area = calculatePolygonArea(currentPolygonPositions, camera, renderer);
+          const perimeter = calculatePolygonPerimeter(currentPolygonPositions, camera, renderer);
+
+          // Display the area and perimeter
+          displayAreaAndPerimeter(area, perimeter);
+        }
+
       }
       // else {
       //   console.log("nothing");

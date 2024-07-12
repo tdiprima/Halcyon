@@ -216,3 +216,35 @@ export function turnOtherButtonsOff(activeButton) {
     }
   });
 }
+
+export function displayAreaAndPerimeter(area, perimeter) {
+  // Convert area and perimeter to microns
+  let areaInMicrons = area / 16; // 1 micron² = 16 pixels²
+  let perimeterInMicrons = perimeter / 4; // 1 micron = 4 pixels
+
+  let div = document.createElement("div");
+  div.style.position = "absolute";
+  div.style.top = "10px";
+  div.style.left = "10px";
+  div.style.backgroundColor = "white";
+  div.style.padding = "10px";
+  div.style.border = "1px solid black";
+
+  // Close button
+  let closeButton = document.createElement("span");
+  closeButton.style.float = "right";
+  closeButton.style.cursor = "pointer";
+  closeButton.innerHTML = "&nbsp;X";
+  closeButton.addEventListener("click", function() {
+    div.style.display = "none";
+  });
+
+  // Additionally set timeout
+  setTimeout(() => {
+    div.style.display = 'none';
+  }, 5000);
+
+  div.innerHTML = `Area: ${areaInMicrons.toFixed(2)} microns²<br>Perimeter: ${perimeterInMicrons.toFixed(2)} microns`;
+  div.appendChild(closeButton);
+  document.body.appendChild(div);
+}

@@ -2,9 +2,9 @@
  * Allows user to draw on an image.
  */
 import * as THREE from 'three';
-import {createButton, textInputPopup, turnOtherButtonsOff} from "../helpers/elements.js";
+import {createButton, textInputPopup, turnOtherButtonsOff, displayAreaAndPerimeter} from "../helpers/elements.js";
 import {getMousePosition} from "../helpers/mouse.js";
-import {worldToImageCoordinates, imageToWorldCoordinates} from "../helpers/conversions.js";
+import {worldToImageCoordinates, imageToWorldCoordinates, calculatePolygonArea, calculatePolygonPerimeter} from "../helpers/conversions.js";
 
 export function enableDrawing(scene, camera, renderer, controls) {
   let btnDraw = createButton({
@@ -126,6 +126,13 @@ export function enableDrawing(scene, camera, renderer, controls) {
         line.geometry = closedPolygonGeometry;
         line.geometry.setDrawRange(0, currentPolygonPositions.length / 3);
         line.geometry.computeBoundingSphere();
+
+        // Calculate area and perimeter
+        const area = calculatePolygonArea(currentPolygonPositions, camera, renderer);
+        const perimeter = calculatePolygonPerimeter(currentPolygonPositions, camera, renderer);
+
+        // Display the area and perimeter
+        displayAreaAndPerimeter(area, perimeter);
       }
 
       polygonPositions.push(currentPolygonPositions); // Store the current polygon's positions

@@ -31,17 +31,18 @@ export function toolbar(scene, camera, renderer, controls, originalZ) {
   polygon(scene, camera, renderer, controls);
   hollowBrush(scene, camera, renderer, controls);
   edit(scene, camera, renderer, controls, originalZ);
-  label(scene, camera, renderer, controls, originalZ);
+  label(scene, camera, renderer, controls, originalZ, "label");
+  label(scene, camera, renderer, controls, originalZ, "area");
   // shading(scene);
   grid(scene, camera, renderer, controls);
   ruler(scene, camera, renderer, controls);
   screenCapture(renderer);
   crosshairs(scene, camera);
-  rectangle(scene, camera, renderer, controls, {
-    button: "<i class=\"fa fa-bar-chart\"></i>",
-    color: 0xff7900,
-    select: true
-  });
+  // rectangle(scene, camera, renderer, controls, {
+  //   button: "<i class=\"fa fa-bar-chart\"></i>",
+  //   color: 0xff7900,
+  //   select: true
+  // });
   save(scene);
   lockRotate(controls);
   resetCamera(controls);

@@ -107,3 +107,67 @@ export function pixelsToMicrons(length_in_px) {
 export function pixelsToMicrometers(pixels, micronsPerPixel) {
   return pixels * micronsPerPixel;
 }
+
+function toScreenPosition(point, camera, renderer) {
+  const canvas = renderer.domElement;
+  const widthHalf = 0.5 * canvas.width;
+  const heightHalf = 0.5 * canvas.height;
+
+  const vector = point.clone().project(camera);
+
+  vector.x = (vector.x * widthHalf) + widthHalf;
+  vector.y = -(vector.y * heightHalf) + heightHalf;
+
+  return vector;
+}
+
+export function calculatePolygonArea(positions, camera, renderer) {
+  // The Shoelace formula (or Gauss's area formula)
+  let area = 0;
+  const n = positions.length / 3;
+  const screenPositions = [];
+
+  for (let i = 0; i < n; i++) {
+    const vertex = new THREE.Vector3(positions[3 * i], positions[3 * i + 1], positions[3 * i + 2]);
+    screenPositions.push(toScreenPosition(vertex, camera, renderer));
+  }
+
+  for (let i = 0; i < n - 1; i++) {
+    const x1 = screenPositions[i].x;
+    const y1 = screenPositions[i].y;
+    const x2 = screenPositions[i + 1].x;
+    const y2 = screenPositions[i + 1].y;
+    area += (x1 * y2 - x2 * y1);
+  }
+  area = Math.abs(area) / 2;
+  return area;
+}
+
+export function calculatePolygonPerimeter(positions, camera, renderer) {
+  // The sum of the distances between each pair of consecutive vertices
+  let perimeter = 0;
+  const n = positions.length / 3;
+  const screenPositions = [];
+
+  for (let i = 0; i < n; i++) {
+    const vertex = new THREE.Vector3(positions[3 * i], positions[3 * i + 1], positions[3 * i + 2]);
+    screenPositions.push(toScreenPosition(vertex, camera, renderer));
+  }
+
+  for (let i = 0; i < n - 1; i++) {
+    const x1 = screenPositions[i].x;
+    const y1 = screenPositions[i].y;
+    const x2 = screenPositions[i + 1].x;
+    const y2 = screenPositions[i + 1].y;
+    perimeter += Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+  }
+
+  // Closing the polygon by adding distance between the last and the first point
+  const x1 = screenPositions[n - 1].x;
+  const y1 = screenPositions[n - 1].y;
+  const x2 = screenPositions[0].x;
+  const y2 = screenPositions[0].y;
+  perimeter += Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+
+  return perimeter;
+}
