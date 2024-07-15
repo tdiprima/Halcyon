@@ -4,6 +4,17 @@ import { getMousePosition } from "../helpers/mouse.js";
 import { worldToImageCoordinates, getUrl } from "../helpers/conversions.js";
 
 export function rectangle(scene, camera, renderer, controls, options) {
+  const canvas = renderer.domElement;
+  let isDrawing = false;
+  let mouseIsPressed = false;
+  let startPoint;
+  let endPoint;
+  let currentRectangle;
+
+  let material = new THREE.LineBasicMaterial({ color: options.color, linewidth: 5 });
+  material.depthTest = false;
+  material.depthWrite = false;
+
   let rectangleButton = createButton({
     id: options.select ? "selection" : "rectangle",
     innerHtml: options.button,
@@ -18,6 +29,10 @@ export function rectangle(scene, camera, renderer, controls, options) {
       canvas.removeEventListener("mousedown", onMouseDown, false);
       canvas.removeEventListener("mousemove", onMouseMove, false);
       canvas.removeEventListener("mouseup", onMouseUp, false);
+
+      canvas.removeEventListener("touchstart", onTouchStart, false);
+      canvas.removeEventListener("touchmove", onTouchMove, false);
+      canvas.removeEventListener("touchend", onTouchEnd, false);
     } else {
       isDrawing = true;
       turnOtherButtonsOff(rectangleButton);
@@ -26,19 +41,12 @@ export function rectangle(scene, camera, renderer, controls, options) {
       canvas.addEventListener("mousedown", onMouseDown, false);
       canvas.addEventListener("mousemove", onMouseMove, false);
       canvas.addEventListener("mouseup", onMouseUp, false);
+
+      canvas.addEventListener("touchstart", onTouchStart, false);
+      canvas.addEventListener("touchmove", onTouchMove, false);
+      canvas.addEventListener("touchend", onTouchEnd, false);
     }
   });
-
-  const canvas = renderer.domElement;
-  let material = new THREE.LineBasicMaterial({ color: options.color, linewidth: 5 });
-  material.depthTest = false;
-  material.depthWrite = false;
-
-  let isDrawing = false;
-  let mouseIsPressed = false;
-  let startPoint;
-  let endPoint;
-  let currentRectangle;
 
   function onMouseDown(event) {
     if (isDrawing) {
@@ -72,6 +80,39 @@ export function rectangle(scene, camera, renderer, controls, options) {
     }
   }
 
+  function onTouchStart(event) {
+    if (isDrawing) {
+      mouseIsPressed = true;
+      let touch = event.touches[0];
+      startPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
+      currentRectangle = createRectangle();
+    }
+  }
+
+  function onTouchMove(event) {
+    if (isDrawing && mouseIsPressed) {
+      let touch = event.touches[0];
+      endPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
+      updateRectangle();
+    }
+  }
+
+  function onTouchEnd(event) {
+    if (isDrawing) {
+      mouseIsPressed = false;
+      let touch = event.changedTouches[0];
+      endPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
+      updateRectangle();
+
+      if (options.select) {
+        getIIIF();
+        removeObject(currentRectangle);
+      } else {
+        textInputPopup(event, currentRectangle);
+      }
+    }
+  }
+
   function createRectangle() {
     let geometry = new THREE.BufferGeometry();
     let vertices = new Float32Array(12);
@@ -87,7 +128,7 @@ export function rectangle(scene, camera, renderer, controls, options) {
   }
 
   function updateRectangle() {
-    if (!currentRectangle) return
+    if (!currentRectangle) return;
     let positions = currentRectangle.geometry.attributes.position.array;
     positions[0] = startPoint.x;
     positions[1] = startPoint.y;

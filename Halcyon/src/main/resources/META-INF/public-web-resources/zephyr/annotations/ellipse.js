@@ -3,6 +3,18 @@ import { createButton, textInputPopup, turnOtherButtonsOff } from "../helpers/el
 import { getMousePosition } from "../helpers/mouse.js";
 
 export function ellipse(scene, camera, renderer, controls) {
+  const canvas = renderer.domElement;
+  let material = new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 5 });
+  material.depthTest = false;
+  material.depthWrite = false;
+  let segments = 64; // 64 line segments is a common choice
+
+  let isDrawing = false;
+  let mouseIsPressed = false;
+  let startPoint;
+  let endPoint;
+  let currentEllipse; // This will hold the ellipse currently being drawn
+
   let ellipseButton = createButton({
     id: "ellipse",
     innerHtml: "<i class=\"fa-regular fa-circle\"></i>",
@@ -17,6 +29,10 @@ export function ellipse(scene, camera, renderer, controls) {
       canvas.removeEventListener("mousedown", onMouseDown, false);
       canvas.removeEventListener("mousemove", onMouseMove, false);
       canvas.removeEventListener("mouseup", onMouseUp, false);
+
+      canvas.removeEventListener("touchstart", onTouchStart, false);
+      canvas.removeEventListener("touchmove", onTouchMove, false);
+      canvas.removeEventListener("touchend", onTouchEnd, false);
     } else {
       isDrawing = true;
       turnOtherButtonsOff(ellipseButton);
@@ -26,20 +42,12 @@ export function ellipse(scene, camera, renderer, controls) {
       canvas.addEventListener("mousedown", onMouseDown, false);
       canvas.addEventListener("mousemove", onMouseMove, false);
       canvas.addEventListener("mouseup", onMouseUp, false);
+
+      canvas.addEventListener("touchstart", onTouchStart, false);
+      canvas.addEventListener("touchmove", onTouchMove, false);
+      canvas.addEventListener("touchend", onTouchEnd, false);
     }
   });
-
-  const canvas = renderer.domElement;
-  let material = new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 5 });
-  material.depthTest = false;
-  material.depthWrite = false;
-  let segments = 64; // 64 line segments is a common choice
-
-  let isDrawing = false;
-  let mouseIsPressed = false;
-  let startPoint;
-  let endPoint;
-  let currentEllipse; // This will hold the ellipse currently being drawn
 
   function onMouseDown(event) {
     if (isDrawing) {
@@ -62,8 +70,35 @@ export function ellipse(scene, camera, renderer, controls) {
       endPoint = getMousePosition(event.clientX, event.clientY, canvas, camera);
       updateEllipse();
       // deleteIcon(event, currentEllipse, scene);
-      textInputPopup(event, currentEllipse, scene);
+      textInputPopup(event, currentEllipse);
       // console.log("currentEllipse:", currentEllipse);
+    }
+  }
+
+  function onTouchStart(event) {
+    if (isDrawing) {
+      mouseIsPressed = true;
+      let touch = event.touches[0];
+      startPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
+      currentEllipse = createEllipse();
+    }
+  }
+
+  function onTouchMove(event) {
+    if (isDrawing && mouseIsPressed) {
+      let touch = event.touches[0];
+      endPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
+      updateEllipse();
+    }
+  }
+
+  function onTouchEnd(event) {
+    if (isDrawing) {
+      mouseIsPressed = false;
+      let touch = event.changedTouches[0];
+      endPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
+      updateEllipse();
+      textInputPopup(event, currentEllipse);
     }
   }
 

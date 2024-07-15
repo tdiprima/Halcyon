@@ -70,6 +70,10 @@ export function hollowBrush(scene, camera, renderer, controls) {
       renderer.domElement.removeEventListener('mousedown', onMouseDown);
       renderer.domElement.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
+
+      renderer.domElement.removeEventListener('touchstart', onTouchStart);
+      renderer.domElement.removeEventListener('touchmove', onTouchMove);
+      renderer.domElement.removeEventListener('touchend', onTouchEnd);
     } else {
       isDrawing = true;
       turnOtherButtonsOff(brushButton);
@@ -78,6 +82,10 @@ export function hollowBrush(scene, camera, renderer, controls) {
       renderer.domElement.addEventListener('mousedown', onMouseDown);
       renderer.domElement.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
+
+      renderer.domElement.addEventListener('touchstart', onTouchStart);
+      renderer.domElement.addEventListener('touchmove', onTouchMove);
+      renderer.domElement.addEventListener('touchend', onTouchEnd);
     }
   });
 
@@ -112,6 +120,55 @@ export function hollowBrush(scene, camera, renderer, controls) {
 
   // Function to stop drawing
   function onMouseUp(event) {
+    if (isDrawing) {
+      mouseIsPressed = false;
+      // Union Calculation
+      const unionGeometry = calculateUnion(); // Calculate the union of all drawn circles
+      if (unionGeometry) {
+        drawUnion(unionGeometry, event); // Visualize the union
+      }
+      circles = []; // Reset for the next drawing session
+
+      // Remove all circles from the scene
+      while (brushShapeGroup.children.length > 0) {
+        let child = brushShapeGroup.children[0];
+        // Scene Management: dispose of those resources to avoid memory leaks
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) child.material.dispose();
+        brushShapeGroup.remove(child);
+      }
+    }
+  }
+
+  function onTouchStart(event) {
+    if (isDrawing) {
+      mouseIsPressed = true;
+      brushShapeGroup = new THREE.Group();
+      scene.add(brushShapeGroup);
+    }
+  }
+
+  function onTouchMove(event) {
+    if (isDrawing && mouseIsPressed) {
+      const touch = event.touches[0];
+      const point = getMousePosition(touch.clientX, touch.clientY, renderer.domElement, camera);
+      if (point === null) return;
+
+      // Create a Three.js circle at the intersection point
+      const brushGeometry = new THREE.CircleGeometry(brushSize, 32);
+      const brushMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.1 });
+      const brushCircle = new THREE.Mesh(brushGeometry, brushMaterial);
+
+      brushCircle.position.set(point.x, point.y, 0);
+
+      brushShapeGroup.add(brushCircle); // Add the circle to the group
+
+      // Store the center point and radius of each drawn circle in a way that JSTS can use to calculate unions
+      circles.push({center: {x: point.x, y: point.y}, radius: brushSize});
+    }
+  }
+
+  function onTouchEnd(event) {
     if (isDrawing) {
       mouseIsPressed = false;
       // Union Calculation
