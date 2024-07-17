@@ -70,8 +70,10 @@ export function grid(scene, camera, renderer, controls) {
     if (tapInterval < 300 && tapInterval > 0) {
       removeMode = !removeMode;
       alert(`Remove mode: ${removeMode ? 'ON' : 'OFF'}`);
+      lastTapTime = 0; // Reset lastTapTime to avoid misinterpretation of continuous taps
+    } else {
+      lastTapTime = currentTime;
     }
-    lastTapTime = currentTime;
 
     isDragging = true;
     colorSquare(event.touches[0]);
