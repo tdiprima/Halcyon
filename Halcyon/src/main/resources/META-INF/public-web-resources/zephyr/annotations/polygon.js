@@ -8,7 +8,7 @@ export function polygon(scene, camera, renderer, controls) {
   let mouseIsPressed = false;
   let points = [];
   let currentPolygon = null;
-  let longPressTimeout;
+  let lastTapTime = 0;
 
   let material = new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 5 });
   material.depthTest = false;
@@ -29,11 +29,9 @@ export function polygon(scene, camera, renderer, controls) {
       canvas.removeEventListener("mousemove", onMouseMove, false);
       canvas.removeEventListener("mouseup", onMouseUp, false);
       canvas.removeEventListener("dblclick", onDoubleClick, false);
-
       canvas.removeEventListener("touchstart", onTouchStart, false);
-      canvas.removeEventListener("touchmove", onTouchMove, false);
       canvas.removeEventListener("touchend", onTouchEnd, false);
-      canvas.removeEventListener("touchcancel", onTouchCancel, false);
+      canvas.removeEventListener("touchcancel", onTouchEnd, false);
     } else {
       isDrawing = true;
       turnOtherButtonsOff(polygonButton);
@@ -43,21 +41,21 @@ export function polygon(scene, camera, renderer, controls) {
       canvas.addEventListener("mousemove", onMouseMove, false);
       canvas.addEventListener("mouseup", onMouseUp, false);
       canvas.addEventListener("dblclick", onDoubleClick, false);
-
       canvas.addEventListener("touchstart", onTouchStart, false);
-      canvas.addEventListener("touchmove", onTouchMove, false);
       canvas.addEventListener("touchend", onTouchEnd, false);
-      canvas.addEventListener("touchcancel", onTouchCancel, false);
+      canvas.addEventListener("touchcancel", onTouchEnd, false);
+
+      resetDrawingState(); // Reset state when starting a new drawing session
     }
   });
 
   function onMouseDown(event) {
-    if (isDrawing && !mouseIsPressed) { // Ensure we start a new polygon
+    if (isDrawing && !mouseIsPressed) {
       mouseIsPressed = true;
       points = []; // Reset points for a new polygon
       let point = getMousePosition(event.clientX, event.clientY, canvas, camera);
       points.push(point);
-      if (!currentPolygon) { // Create a new LineLoop if there isn't an active one
+      if (!currentPolygon) {
         currentPolygon = createPolygon();
       }
     }
@@ -80,77 +78,55 @@ export function polygon(scene, camera, renderer, controls) {
   }
 
   function onDoubleClick(event) {
-    if (isDrawing && points.length > 2) { // Ensure a valid polygon
+    if (isDrawing && points.length > 2) {
       mouseIsPressed = false;
       points.pop(); // Remove the duplicated point from double-click
       finalizeCurrentPolygon(); // Finalize and prepare for a new polygon
       // deleteIcon(event, currentPolygon, scene);
       textInputPopup(event, currentPolygon);
-      currentPolygon = null; // Reset currentPolygon for the next one
     }
   }
 
+  // Touch event handlers
   function onTouchStart(event) {
-    if (isDrawing && !mouseIsPressed) { // Ensure we start a new polygon
+    if (isDrawing) {
+      let currentTime = new Date().getTime();
+      let tapInterval = currentTime - lastTapTime;
+      if (tapInterval < 300 && tapInterval > 0) {
+        onDoubleClick(event);
+        return;
+      }
+      lastTapTime = currentTime;
+
       mouseIsPressed = true;
-      points = []; // Reset points for a new polygon
       let touch = event.touches[0];
       let point = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
       points.push(point);
-      if (!currentPolygon) { // Create a new LineLoop if there isn't an active one
+      if (!currentPolygon) {
         currentPolygon = createPolygon();
       }
-
-      longPressTimeout = setTimeout(() => {
-        if (isDrawing && points.length > 2) {
-          onLongPress(event);
-        }
-      }, 500); // Set long press duration to 500ms
-    }
-  }
-
-  function onTouchMove(event) {
-    if (isDrawing && mouseIsPressed) {
-      let touch = event.touches[0];
-      let point = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
-      points[points.length - 1] = point;
-      updatePolygon();
+      event.preventDefault();
     }
   }
 
   function onTouchEnd(event) {
-    clearTimeout(longPressTimeout);
     if (isDrawing) {
+      mouseIsPressed = false;
       let touch = event.changedTouches[0];
       let point = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
       points.push(point);
       updatePolygon();
-    }
-  }
-
-  function onTouchCancel(event) {
-    clearTimeout(longPressTimeout);
-  }
-
-  function onLongPress(event) {
-    if (isDrawing && points.length > 2) { // Ensure a valid polygon
-      mouseIsPressed = false;
-      points.pop(); // Remove the duplicated point from long press
-      finalizeCurrentPolygon(); // Finalize and prepare for a new polygon
-      textInputPopup(event, currentPolygon);
-      currentPolygon = null; // Reset currentPolygon for the next one
+      event.preventDefault();
     }
   }
 
   function finalizeCurrentPolygon() {
-    // This function replaces the temporary line drawing with a finalized LineLoop
-    updatePolygon(); // Ensure the final point is included
-    // No need to create a new object here, as updatePolygon already updates the LineLoop
+    updatePolygon();
+    resetDrawingState();
   }
 
   function createPolygon() {
     let geometry = new THREE.BufferGeometry();
-    // Ensure material and geometry are correctly set up for a LineLoop
     let polygon = new THREE.LineLoop(geometry, material);
     polygon.renderOrder = 999;
     polygon.name = "polygon annotation";
@@ -159,7 +135,6 @@ export function polygon(scene, camera, renderer, controls) {
   }
 
   function updatePolygon() {
-    // This function remains largely the same, ensuring the LineLoop's geometry is updated
     if (currentPolygon && points.length > 0) {
       let positions = new Float32Array(points.length * 3);
       for (let i = 0; i < points.length; i++) {
@@ -171,5 +146,11 @@ export function polygon(scene, camera, renderer, controls) {
       currentPolygon.geometry.attributes.position.needsUpdate = true;
       currentPolygon.geometry.setDrawRange(0, points.length);
     }
+  }
+
+  function resetDrawingState() {
+    points = [];
+    mouseIsPressed = false;
+    currentPolygon = null;
   }
 }
