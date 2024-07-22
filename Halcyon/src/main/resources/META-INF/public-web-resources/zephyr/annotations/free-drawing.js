@@ -2,21 +2,28 @@
  * Allows user to draw on an image.
  */
 import * as THREE from 'three';
-import {createButton, textInputPopup, turnOtherButtonsOff} from "../helpers/elements.js";
-import {getMousePosition} from "../helpers/mouse.js";
-import {worldToImageCoordinates, imageToWorldCoordinates} from "../helpers/conversions.js";
+import { getColorAndType } from "../helpers/colorPalette.js";
+import { createButton, turnOtherButtonsOff, displayAreaAndPerimeter } from "../helpers/elements.js";
+import { getMousePosition } from "../helpers/mouse.js";
+import { worldToImageCoordinates, imageToWorldCoordinates, calculatePolygonArea, calculatePolygonPerimeter } from "../helpers/conversions.js";
 
 export function enableDrawing(scene, camera, renderer, controls) {
+  let isDrawing = false;
+  let mouseIsPressed = false;
+  let color = "#0000ff"; // Default color
+  let type = "";
+  let lineMaterial = new THREE.LineBasicMaterial({color, linewidth: 5});
+  let line;
+  let currentPolygonPositions = []; // Store positions for current polygon
+  let polygonPositions = []; // Store positions for each polygon
+  const distanceThreshold = 0.1;
+  const canvas = renderer.domElement;
+
   let btnDraw = createButton({
     id: "toggleButton",
     innerHtml: "<i class=\"fas fa-pencil-alt\"></i>",
     title: "Free Drawing"
   });
-
-  let isDrawing = false;
-  let mouseIsPressed = false;
-  let color = "#0000ff"; // Default color
-  let type = "";
 
   btnDraw.addEventListener("click", function () {
     if (isDrawing) {
@@ -24,24 +31,19 @@ export function enableDrawing(scene, camera, renderer, controls) {
       controls.enabled = true;
       this.classList.replace('btnOn', 'annotationBtn');
 
-      // Remove the mouse event listeners
-      renderer.domElement.removeEventListener("mousemove", onMouseMove);
-      renderer.domElement.removeEventListener("mouseup", onMouseUp);
-      renderer.domElement.removeEventListener("pointerdown", onPointerDown);
+      // Remove the mouse and touch event listeners
+      canvas.removeEventListener("mousemove", onMouseMove);
+      canvas.removeEventListener("mouseup", onMouseUp);
+      canvas.removeEventListener("pointerdown", onPointerDown);
+
+      canvas.removeEventListener("touchmove", onTouchMove);
+      canvas.removeEventListener("touchend", onTouchEnd);
+      canvas.removeEventListener("touchstart", onTouchStart);
     } else {
-      // Set the color and type before starting to draw
-      if (window.cancerColor && window.cancerColor.length > 0) {
-        color = window.cancerColor;
-        type = window.cancerType;
-        // console.log(color, type);
-      } else {
-        // console.log("here");
-        color = "#0000ff";
-        type = "";
-      }
+      ({ color, type } = getColorAndType());
 
       // Create a material for the line with the current color
-      lineMaterial = new THREE.LineBasicMaterial({color, linewidth: 5});
+      lineMaterial = new THREE.LineBasicMaterial({ color, linewidth: 5 });
       lineMaterial.polygonOffset = true; // Prevent z-fighting (which causes flicker)
       lineMaterial.polygonOffsetFactor = -1; // Push the polygon further away from the camera
       lineMaterial.depthTest = false;  // Render on top
@@ -55,19 +57,16 @@ export function enableDrawing(scene, camera, renderer, controls) {
       controls.enabled = false;
       this.classList.replace('annotationBtn', 'btnOn');
 
-      // Set up the mouse event listeners
-      renderer.domElement.addEventListener("mousemove", onMouseMove);
-      renderer.domElement.addEventListener("mouseup", onMouseUp);
-      renderer.domElement.addEventListener("pointerdown", onPointerDown);
+      // Set up the mouse and touch event listeners
+      canvas.addEventListener("mousemove", onMouseMove);
+      canvas.addEventListener("mouseup", onMouseUp);
+      canvas.addEventListener("pointerdown", onPointerDown);
+
+      canvas.addEventListener("touchmove", onTouchMove);
+      canvas.addEventListener("touchend", onTouchEnd);
+      canvas.addEventListener("touchstart", onTouchStart);
     }
   });
-
-  let lineMaterial = new THREE.LineBasicMaterial({color, linewidth: 5});
-
-  let line;
-  let currentPolygonPositions = []; // Store positions for current polygon
-  let polygonPositions = []; // Store positions for each polygon
-  const distanceThreshold = 0.1;
 
   function onPointerDown(event) {
     if (isDrawing) {
@@ -77,6 +76,9 @@ export function enableDrawing(scene, camera, renderer, controls) {
       line = new THREE.Line(new THREE.BufferGeometry(), lineMaterial);
       line.name = "free-draw annotation";
       line.renderOrder = 999;
+      if (type.length > 0) {
+        line.cancerType = type;
+      }
       scene.add(line);
 
       currentPolygonPositions = []; // Start a new array for the current polygon's positions
@@ -85,7 +87,7 @@ export function enableDrawing(scene, camera, renderer, controls) {
 
   function onMouseMove(event) {
     if (isDrawing && mouseIsPressed) {
-      let point = getMousePosition(event.clientX, event.clientY, renderer.domElement, camera);
+      let point = getMousePosition(event.clientX, event.clientY, canvas, camera);
 
       // Check if it's the first vertex of the current polygon
       const isFirstVertex = currentPolygonPositions.length === 0;
@@ -126,6 +128,13 @@ export function enableDrawing(scene, camera, renderer, controls) {
         line.geometry = closedPolygonGeometry;
         line.geometry.setDrawRange(0, currentPolygonPositions.length / 3);
         line.geometry.computeBoundingSphere();
+
+        // Calculate area and perimeter
+        const area = calculatePolygonArea(currentPolygonPositions, camera, renderer);
+        const perimeter = calculatePolygonPerimeter(currentPolygonPositions, camera, renderer);
+
+        // Display the area and perimeter
+        displayAreaAndPerimeter(area, perimeter);
       }
 
       polygonPositions.push(currentPolygonPositions); // Store the current polygon's positions
@@ -135,9 +144,81 @@ export function enableDrawing(scene, camera, renderer, controls) {
       // textInputPopup(event, line);
       // console.log("line:", line);
 
+      currentPolygonPositions = []; // Clear the current polygon's array for the next drawing
+    }
+  }
+
+  function onTouchStart(event) {
+    if (isDrawing) {
+      mouseIsPressed = true;
+
+      // Create a new BufferAttribute for each line
+      line = new THREE.Line(new THREE.BufferGeometry(), lineMaterial);
+      line.name = "free-draw annotation";
+      line.renderOrder = 999;
       if (type.length > 0) {
-        line.userData.text = window.cancerType;
+        line.cancerType = type;
       }
+      scene.add(line);
+
+      currentPolygonPositions = []; // Start a new array for the current polygon's positions
+    }
+  }
+
+  function onTouchMove(event) {
+    if (isDrawing && mouseIsPressed) {
+      let touch = event.touches[0];
+      let point = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
+
+      // Check if it's the first vertex of the current polygon
+      const isFirstVertex = currentPolygonPositions.length === 0;
+
+      if (isFirstVertex) {
+        currentPolygonPositions.push(point.x, point.y, point.z);
+      } else {
+        // DISTANCE CHECK
+        const lastVertex = new THREE.Vector3().fromArray(currentPolygonPositions.slice(-3));
+        const currentVertex = new THREE.Vector3(point.x, point.y, point.z);
+        const distance = lastVertex.distanceTo(currentVertex);
+
+        if (distance > distanceThreshold) {
+          currentPolygonPositions.push(point.x, point.y, point.z); // Store the position in the current polygon's array
+          line.geometry.setAttribute("position", new THREE.Float32BufferAttribute(currentPolygonPositions, 3)); // Use the current polygon's array for the line's position attribute
+        }
+
+        if (line.geometry.attributes.position) {
+          line.geometry.attributes.position.needsUpdate = true;
+        }
+      }
+    }
+  }
+
+  function onTouchEnd(event) {
+    if (isDrawing && mouseIsPressed) {
+      mouseIsPressed = false;
+
+      // Ensure there are at least 3 points to form a closed polygon
+      if (currentPolygonPositions.length >= 9) { // 3 points * 3 coordinates (x, y, z)
+        // Close the polygon by adding the first point to the end
+        const firstPoint = currentPolygonPositions.slice(0, 3);
+        currentPolygonPositions.push(...firstPoint);
+
+        // Create a new geometry with the closed polygon positions
+        const closedPolygonGeometry = new THREE.BufferGeometry();
+        closedPolygonGeometry.setAttribute('position', new THREE.Float32BufferAttribute(currentPolygonPositions, 3));
+        line.geometry = closedPolygonGeometry;
+        line.geometry.setDrawRange(0, currentPolygonPositions.length / 3);
+        line.geometry.computeBoundingSphere();
+
+        // Calculate area and perimeter
+        const area = calculatePolygonArea(currentPolygonPositions, camera, renderer);
+        const perimeter = calculatePolygonPerimeter(currentPolygonPositions, camera, renderer);
+
+        // Display the area and perimeter
+        displayAreaAndPerimeter(area, perimeter);
+      }
+
+      polygonPositions.push(currentPolygonPositions); // Store the current polygon's positions
 
       currentPolygonPositions = []; // Clear the current polygon's array for the next drawing
     }

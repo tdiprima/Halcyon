@@ -7,7 +7,7 @@ import {createSlider, createButton} from "./elements.js";
 export function brightContrast(scene) {
   let contrastSlider = createSlider({
     id: "contrast",
-    title: "<i class=\"fa fa-adjust\" aria-hidden=\"true\"></i>",
+    title: "<i class=\"fa fa-adjust\" aria-hidden=\"true\" title=\"Contrast\"></i>",
     min: 0,
     max: 4,
     step: 0.01,
@@ -16,7 +16,7 @@ export function brightContrast(scene) {
 
   let brightnessSlider = createSlider({
     id: "brightness",
-    title: "<i class=\"fa fa-sun\" aria-hidden=\"true\"></i>",
+    title: "<i class=\"fa fa-sun\" aria-hidden=\"true\" title=\"Brightness\"></i>",
     min: -1,
     max: 1,
     step: 0.01,

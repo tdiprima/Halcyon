@@ -35,6 +35,10 @@ export function ruler(scene, camera, renderer, controls) {
         canvas.removeEventListener('mousemove', onMouseMove, false);
         canvas.removeEventListener('mouseup', onMouseUp, false);
 
+        canvas.removeEventListener('touchstart', onTouchStart, false);
+        canvas.removeEventListener('touchmove', onTouchMove, false);
+        canvas.removeEventListener('touchend', onTouchEnd, false);
+
         // Clear the previously drawn line and text from the scene, ensuring a clean slate for the next drawing action.
         if (line) {
           for (let i = scene.children.length - 1; i >= 0; i--) {
@@ -61,6 +65,10 @@ export function ruler(scene, camera, renderer, controls) {
         canvas.addEventListener('mousedown', onMouseDown, false);
         canvas.addEventListener('mousemove', onMouseMove, false);
         canvas.addEventListener('mouseup', onMouseUp, false);
+
+        canvas.addEventListener('touchstart', onTouchStart, false);
+        canvas.addEventListener('touchmove', onTouchMove, false);
+        canvas.addEventListener('touchend', onTouchEnd, false);
 
         lineGeometry = new THREE.BufferGeometry();
         // Line material
@@ -194,6 +202,96 @@ export function ruler(scene, camera, renderer, controls) {
     }
 
     function onMouseUp() {
+      mouseIsPressed = false;
+      circle.visible = false;
+      console.log(`%c${message}`, "color: #ccff00;");
+    }
+
+    function onTouchStart(event) {
+      if (isDrawing) {
+        mouseIsPressed = true;
+        const touch = event.touches[0];
+        startPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
+        startVector = new THREE.Vector3(startPoint.x, startPoint.y, 0);
+
+        lineGeometry.setFromPoints([startVector, startVector]);
+        line = new THREE.Line(lineGeometry, lineMaterial);
+        line.name = "ruler";
+        line.renderOrder = 999;
+        scene.add(line);
+
+        circle.position.copy(startVector);
+        circle.scale.set(0, 0, 0);
+        circle.visible = true;
+      }
+    }
+
+    function onTouchMove(event) {
+      if (isDrawing && mouseIsPressed) {
+        const touch = event.touches[0];
+        endPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
+        endVector = new THREE.Vector3(endPoint.x, endPoint.y, 0);
+
+        line.geometry.setFromPoints([startVector, endVector]);
+
+        if (textMesh) scene.remove(textMesh);
+        if (textBackground) scene.remove(textBackground);
+
+        let length = Calculate.lineLength(
+          startPoint.x,
+          startPoint.y,
+          endPoint.x,
+          endPoint.y,
+          calculateScaleFactor(camera, renderer)
+        ).toFixed(2);
+
+        message = `Length ${length} \u00B5m`;
+
+        // Calculate the distance from the camera to the text
+        const distanceToCamera = camera.position.distanceTo(endVector);
+        const textSize = distanceToCamera * 0.05; // Adjust this scaling factor as needed
+
+        let textGeometry = new TextGeometry(message, {
+          font: font,
+          size: textSize, // Use the dynamic text size
+          height: textSize / 10 // Adjust the height relative to the size
+        });
+
+        let textMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, depthTest: false });
+        textMesh = new THREE.Mesh(textGeometry, textMaterial);
+        textMesh.position.copy(endVector);
+        textMesh.renderOrder = 998;
+        scene.add(textMesh);
+
+        // Create background for text
+        const bbox = new THREE.Box3().setFromObject(textMesh);
+        const bboxSize = bbox.getSize(new THREE.Vector3());
+
+        let backgroundGeometry = new THREE.PlaneGeometry(bboxSize.x + 10, bboxSize.y + 10);
+        let backgroundMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, depthTest: false });
+        textBackground = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+
+        // Position the background so that the bottom left corner is at the pointer
+        textBackground.position.copy(endVector);
+        textBackground.position.x += (bboxSize.x + 10) / 2; // Move to the right by half the width
+        textBackground.position.y -= (bboxSize.y + 10) / 2; // Move up by half the height
+        textBackground.position.y += (bboxSize.y + 10) / 2 + 5; // Center the text vertically and move up slightly more
+        textBackground.position.z -= 0.01; // Slightly behind the text
+        textBackground.renderOrder = 997; // Render before the text
+        scene.add(textBackground);
+
+        // Update the circle size and position
+        const distance = startVector.distanceTo(endVector);
+        // Edges of the circle will align with the endpoints of the line being drawn:
+        circle.scale.set(distance / 2, distance / 2, distance / 2);
+        circle.position.copy(startVector.clone().add(endVector).multiplyScalar(0.5));
+        circle.visible = true;
+
+        renderer.render(scene, camera);
+      }
+    }
+
+    function onTouchEnd() {
       mouseIsPressed = false;
       circle.visible = false;
       console.log(`%c${message}`, "color: #ccff00;");

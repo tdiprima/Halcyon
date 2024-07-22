@@ -59,8 +59,8 @@ export function textInputPopup(event, object) {
 
   const input = document.createElement('input');
   input.type = 'text';
-  if (object.userData.text && object.userData.text !== '') {
-    input.value = object.userData.text;
+  if (object.cancerType && object.cancerType !== '') {
+    input.value = object.cancerType;
   } else {
     input.placeholder = 'Enter text for the shape';
   }
@@ -111,8 +111,7 @@ export function textInputPopup(event, object) {
   // Handle text input and saving
   button.addEventListener('click', () => {
     if (input.value) {
-      object.userData.text = input.value; // Store text in the object's userData
-      // You can now access the text using object.userData.text
+      object.cancerType = input.value; // Store text in the object's userData
     }
     popup.remove(); // Remove the popup
   });
@@ -215,4 +214,36 @@ export function turnOtherButtonsOff(activeButton) {
       }
     }
   });
+}
+
+export function displayAreaAndPerimeter(area, perimeter) {
+  // Convert area and perimeter to microns
+  let areaInMicrons = area / 16; // 1 micron² = 16 pixels²
+  let perimeterInMicrons = perimeter / 4; // 1 micron = 4 pixels
+
+  let div = document.createElement("div");
+  div.style.position = "absolute";
+  div.style.top = "10px";
+  div.style.left = "10px";
+  div.style.backgroundColor = "white";
+  div.style.padding = "10px";
+  div.style.border = "1px solid black";
+
+  // Close button
+  let closeButton = document.createElement("span");
+  closeButton.style.float = "right";
+  closeButton.style.cursor = "pointer";
+  closeButton.innerHTML = "&nbsp;X";
+  closeButton.addEventListener("click", function() {
+    div.style.display = "none";
+  });
+
+  // Additionally set timeout
+  setTimeout(() => {
+    div.style.display = 'none';
+  }, 5000);
+
+  div.innerHTML = `Area: ${areaInMicrons.toFixed(2)} microns²<br>Perimeter: ${perimeterInMicrons.toFixed(2)} microns`;
+  div.appendChild(closeButton);
+  document.body.appendChild(div);
 }

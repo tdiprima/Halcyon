@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import {createButton, textInputPopup, turnOtherButtonsOff} from "./elements.js";
+import { createButton, textInputPopup, turnOtherButtonsOff } from "./elements.js";
 import { DragControls } from "three/addons/controls/DragControls.js";
 
 /**
@@ -151,11 +151,19 @@ export function edit(scene, camera, renderer, controls, originalZ) {
 
     let vertices = mesh.geometry.attributes.position.array;
 
+    let color;
+
+    if (mesh.material && mesh.material.color) {
+      color = mesh.material.color; // This will be a THREE.Color object
+    } else {
+      color = 0x0000ff;
+    }
+
     // Create handles for each vertex
     const handles = [];
     for (let i = 0; i < vertices.length; i += 3) {
       const handleGeometry = new THREE.SphereGeometry(size);
-      const handleMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+      const handleMaterial = new THREE.MeshBasicMaterial({ color });
       const handleMesh = new THREE.Mesh(handleGeometry, handleMaterial);
       handleMesh.name = "handle";
       handleMesh.position.fromArray(vertices.slice(i, i + 3));
@@ -168,15 +176,15 @@ export function edit(scene, camera, renderer, controls, originalZ) {
     // Create DragControls
     const dragControls = new DragControls(handles, camera, renderer.domElement);
 
-    dragControls.addEventListener("dragstart", function (event) {
-      // Set color of handle when dragging starts
-      event.object.material.color.set(0x00ffff);
-    });
+    // dragControls.addEventListener("dragstart", function (event) {
+    //   // Set color of handle when dragging starts
+    //   event.object.material.color.set(0x00ffff);
+    // });
 
-    dragControls.addEventListener("dragend", function (event) {
-      // Set color of handle when dragging ends
-      event.object.material.color.set(0x0000ff);
-    });
+    // dragControls.addEventListener("dragend", function (event) {
+    //   // Set color of handle when dragging ends
+    //   event.object.material.color.set(0x0000ff);
+    // });
 
     dragControls.addEventListener("drag", function (event) {
       const position = event.object.position;

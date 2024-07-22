@@ -1,12 +1,17 @@
 import * as THREE from 'three';
-import {createButton, removeObject, turnOtherButtonsOff} from "../helpers/elements.js";
+import { createButton, turnOtherButtonsOff } from "../helpers/elements.js";
+import { getColorAndType } from "../helpers/colorPalette.js";
 
 export function grid(scene, camera, renderer, controls) {
   const canvas = renderer.domElement;
-  const opacity = 0.1;
   let isGridAdded = false;
-  let grid;
+  let gridLines;
+  let gridSquares;
   let isDragging = false;
+  let removeMode = false;
+  let lastTapTime = 0;
+  let color = "#ff0000"; // Default color
+  let type = "";
 
   let gridButton = createButton({
     id: "addGrid",
@@ -16,17 +21,28 @@ export function grid(scene, camera, renderer, controls) {
 
   gridButton.addEventListener("click", function () {
     if (isGridAdded) {
-      window.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseup', handleMouseUp);
+
+      canvas.removeEventListener('touchstart', handleTouchStart);
+      canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('touchend', handleTouchEnd);
+
       isDragging = false;
       controls.enabled = true;
-      removeGrid();
+      removeGridLines();
       this.classList.replace('btnOn', 'annotationBtn');
     } else {
-      window.addEventListener('mousedown', handleMouseDown);
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      canvas.addEventListener('mousedown', handleMouseDown);
+      canvas.addEventListener('mousemove', handleMouseMove);
+      canvas.addEventListener('mouseup', handleMouseUp);
+
+      canvas.addEventListener('touchstart', handleTouchStart);
+      canvas.addEventListener('touchmove', handleTouchMove);
+      canvas.addEventListener('touchend', handleTouchEnd);
+
+      ({ color, type } = getColorAndType());
       controls.enabled = false;
       turnOtherButtonsOff(gridButton);
       addGrid();
@@ -51,34 +67,82 @@ export function grid(scene, camera, renderer, controls) {
     isDragging = false;
   }
 
+  function handleTouchStart(event) {
+    // Handle double-tap to toggle remove mode
+    const currentTime = new Date().getTime();
+    const tapInterval = currentTime - lastTapTime;
+    if (tapInterval < 300 && tapInterval > 0) {
+      removeMode = !removeMode;
+      alert(`Remove mode: ${removeMode ? 'ON' : 'OFF'}`);
+      lastTapTime = 0; // Reset lastTapTime to avoid misinterpretation of continuous taps
+    } else {
+      lastTapTime = currentTime;
+    }
+
+    isDragging = true;
+    colorSquare(event.touches[0]);
+  }
+
+  function handleTouchMove(event) {
+    if (isDragging) {
+      colorSquare(event.touches[0]);
+    }
+  }
+
+  function handleTouchEnd() {
+    isDragging = false;
+  }
+
   function addGrid() {
-    // Create a transparent grid overlay.
+    // Create a grid overlay with green lines.
     const gridSize = 50; // Define the size of the grid
     const squareSize = 100; // Define the size of each square in the grid
-    grid = new THREE.Group(); // Group to hold the grid
+    gridLines = new THREE.Group(); // Group to hold the grid lines
+    gridSquares = new THREE.Group(); // Group to hold the grid squares
+
+    for (let i = 0; i <= gridSize; i++) {
+      const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(i * squareSize - gridSize * squareSize / 2, -gridSize * squareSize / 2, 0),
+        new THREE.Vector3(i * squareSize - gridSize * squareSize / 2, gridSize * squareSize / 2, 0)
+      ]);
+      const lineMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
+      const line = new THREE.Line(lineGeometry, lineMaterial);
+      gridLines.add(line);
+
+      const lineGeometryHorizontal = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-gridSize * squareSize / 2, i * squareSize - gridSize * squareSize / 2, 0),
+        new THREE.Vector3(gridSize * squareSize / 2, i * squareSize - gridSize * squareSize / 2, 0)
+      ]);
+      const lineHorizontal = new THREE.Line(lineGeometryHorizontal, lineMaterial);
+      gridLines.add(lineHorizontal);
+    }
 
     for (let i = 0; i < gridSize; i++) {
       for (let j = 0; j < gridSize; j++) {
         const geometry = new THREE.PlaneGeometry(squareSize, squareSize);
-        const material = new THREE.MeshBasicMaterial({color: 0x0000ff, transparent: true, opacity: opacity});
+        const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0 });
         const square = new THREE.Mesh(geometry, material);
 
         // Position each square
-        square.position.set(i * squareSize - gridSize * squareSize / 2, j * squareSize - gridSize * squareSize / 2, 0);
-        square.userData = {colored: false};
-        grid.add(square);
+        square.position.set(i * squareSize - gridSize * squareSize / 2 + squareSize / 2, j * squareSize - gridSize * squareSize / 2 + squareSize / 2, 0);
+        square.userData = { colored: false };
+        if (type.length > 0) {
+          square.cancerType = type;
+        }
+        gridSquares.add(square);
       }
     }
 
     updateGridPosition(); // Calculate and set the initial position of the grid
 
-    grid.name = "grid";
-    scene.add(grid);
-    // console.log("grid position:", grid.position);
+    gridLines.name = "gridLines";
+    gridSquares.name = "gridSquares";
+    scene.add(gridLines);
+    scene.add(gridSquares);
   }
 
   function updateGridPosition() {
-    if (!grid) return; // If the grid doesn't exist, exit the function
+    if (!gridLines || !gridSquares) return; // If the grid doesn't exist, exit the function
 
     // Calculate the center of the camera's current view
     const vector = new THREE.Vector3(); // Vector pointing to the center of the screen
@@ -87,16 +151,14 @@ export function grid(scene, camera, renderer, controls) {
     vector.addVectors(camera.position, direction.multiplyScalar(1000)); // Adjust distance based on your scene
 
     // Set grid position to match the calculated center point
-    grid.position.copy(vector);
-    grid.position.z = 0; // keep flush
+    gridLines.position.copy(vector);
+    gridLines.position.z = 0; // keep flush
+    gridSquares.position.copy(vector);
+    gridSquares.position.z = 0; // keep flush
   }
 
-  function removeGrid() {
-    // Collect squares to be removed
-    const squaresToRemove = grid.children.filter(square => !square.userData.colored);
-
-    // Remove the collected squares
-    squaresToRemove.forEach(square => removeObject(square));
+  function removeGridLines() {
+    scene.remove(gridLines);
   }
 
   // Handling Dragging to Color Squares
@@ -114,20 +176,18 @@ export function grid(scene, camera, renderer, controls) {
     raycaster.setFromCamera(mouse, camera);
 
     // Calculate objects intersecting the picking ray
-    const intersects = raycaster.intersectObjects(grid.children);
+    const intersects = raycaster.intersectObjects(gridSquares.children);
 
     if (intersects.length > 0) {
       const square = intersects[0].object;
 
-      if (event.shiftKey && square.userData.colored) {
-        // Shift-click on a colored square to un-color it
-        square.material.color.set(0x0000ff); // Reset to original color
-        square.material.opacity = opacity; // Reset to original opacity
+      if ((event.shiftKey || removeMode) && square.userData.colored) {
+        // Shift-click or double-tap remove mode to un-color the square
+        square.material.opacity = 0;
         square.userData.colored = false;
         square.name = "";
       } else if (!square.userData.colored) {
         // Regular drag to color the square
-        square.material.color.set(0xff0000);
         square.material.opacity = 0.5;
         square.userData.colored = true;
         square.name = "heatmap annotation";

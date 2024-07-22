@@ -33,3 +33,17 @@ export function colorPalette() {
     }
   });
 }
+
+export function getColorAndType() {
+  let color, type;
+  // Set the color and type before starting to draw
+  if (window.cancerColor && window.cancerColor.length > 0) {
+    color = window.cancerColor;
+    type = window.cancerType;
+    // console.log(color, type);
+  } else {
+    color = "#0000ff";
+    type = "";
+  }
+  return {color, type};
+}
