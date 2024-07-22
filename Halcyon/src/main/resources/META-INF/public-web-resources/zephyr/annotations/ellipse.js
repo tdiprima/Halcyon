@@ -104,7 +104,7 @@ export function ellipse(scene, camera, renderer, controls) {
       let touch = event.changedTouches[0];
       endPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
       updateEllipse();
-      textInputPopup(event, currentEllipse);
+      // textInputPopup(event, currentEllipse);
     }
   }
 
