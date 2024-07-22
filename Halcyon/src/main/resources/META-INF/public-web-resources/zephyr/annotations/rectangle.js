@@ -120,7 +120,7 @@ export function rectangle(scene, camera, renderer, controls, options) {
         getIIIF();
         removeObject(currentRectangle);
       } else {
-        textInputPopup(event, currentRectangle);
+        // textInputPopup(event, currentRectangle);
       }
     }
   }
