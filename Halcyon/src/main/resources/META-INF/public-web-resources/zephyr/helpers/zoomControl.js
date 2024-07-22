@@ -59,7 +59,7 @@ export function lockRotate(controls) {
   let lockButton = createButton({
     id: "rotation",
     innerHtml: "<i class=\"fa-solid fa-rotate\"></i>",
-    title: "Toggle Rotation"
+    title: "Lock Rotation"
   });
 
   let locked = false;

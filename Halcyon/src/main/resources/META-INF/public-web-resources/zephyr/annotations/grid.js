@@ -127,7 +127,7 @@ export function grid(scene, camera, renderer, controls) {
         square.position.set(i * squareSize - gridSize * squareSize / 2 + squareSize / 2, j * squareSize - gridSize * squareSize / 2 + squareSize / 2, 0);
         square.userData = { colored: false };
         if (type.length > 0) {
-          square.cancerType = type;
+          square.userData.cancerType = type;
         }
         gridSquares.add(square);
       }
