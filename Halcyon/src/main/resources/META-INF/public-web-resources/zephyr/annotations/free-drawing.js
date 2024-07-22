@@ -2,9 +2,10 @@
  * Allows user to draw on an image.
  */
 import * as THREE from 'three';
-import {createButton, textInputPopup, turnOtherButtonsOff, displayAreaAndPerimeter} from "../helpers/elements.js";
-import {getMousePosition} from "../helpers/mouse.js";
-import {worldToImageCoordinates, imageToWorldCoordinates, calculatePolygonArea, calculatePolygonPerimeter} from "../helpers/conversions.js";
+import { getColorAndType } from "../helpers/colorPalette.js";
+import { createButton, turnOtherButtonsOff, displayAreaAndPerimeter } from "../helpers/elements.js";
+import { getMousePosition } from "../helpers/mouse.js";
+import { worldToImageCoordinates, imageToWorldCoordinates, calculatePolygonArea, calculatePolygonPerimeter } from "../helpers/conversions.js";
 
 export function enableDrawing(scene, camera, renderer, controls) {
   let isDrawing = false;
@@ -16,6 +17,7 @@ export function enableDrawing(scene, camera, renderer, controls) {
   let currentPolygonPositions = []; // Store positions for current polygon
   let polygonPositions = []; // Store positions for each polygon
   const distanceThreshold = 0.1;
+  const canvas = renderer.domElement;
 
   let btnDraw = createButton({
     id: "toggleButton",
@@ -30,26 +32,18 @@ export function enableDrawing(scene, camera, renderer, controls) {
       this.classList.replace('btnOn', 'annotationBtn');
 
       // Remove the mouse and touch event listeners
-      renderer.domElement.removeEventListener("mousemove", onMouseMove);
-      renderer.domElement.removeEventListener("mouseup", onMouseUp);
-      renderer.domElement.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("mousemove", onMouseMove);
+      canvas.removeEventListener("mouseup", onMouseUp);
+      canvas.removeEventListener("pointerdown", onPointerDown);
 
-      renderer.domElement.removeEventListener("touchmove", onTouchMove);
-      renderer.domElement.removeEventListener("touchend", onTouchEnd);
-      renderer.domElement.removeEventListener("touchstart", onTouchStart);
+      canvas.removeEventListener("touchmove", onTouchMove);
+      canvas.removeEventListener("touchend", onTouchEnd);
+      canvas.removeEventListener("touchstart", onTouchStart);
     } else {
-      // Set the color and type before starting to draw
-      if (window.cancerColor && window.cancerColor.length > 0) {
-        color = window.cancerColor;
-        type = window.cancerType;
-        // console.log(color, type);
-      } else {
-        color = "#0000ff";
-        type = "";
-      }
+      ({ color, type } = getColorAndType());
 
       // Create a material for the line with the current color
-      lineMaterial = new THREE.LineBasicMaterial({color, linewidth: 5});
+      lineMaterial = new THREE.LineBasicMaterial({ color, linewidth: 5 });
       lineMaterial.polygonOffset = true; // Prevent z-fighting (which causes flicker)
       lineMaterial.polygonOffsetFactor = -1; // Push the polygon further away from the camera
       lineMaterial.depthTest = false;  // Render on top
@@ -64,13 +58,13 @@ export function enableDrawing(scene, camera, renderer, controls) {
       this.classList.replace('annotationBtn', 'btnOn');
 
       // Set up the mouse and touch event listeners
-      renderer.domElement.addEventListener("mousemove", onMouseMove);
-      renderer.domElement.addEventListener("mouseup", onMouseUp);
-      renderer.domElement.addEventListener("pointerdown", onPointerDown);
+      canvas.addEventListener("mousemove", onMouseMove);
+      canvas.addEventListener("mouseup", onMouseUp);
+      canvas.addEventListener("pointerdown", onPointerDown);
 
-      renderer.domElement.addEventListener("touchmove", onTouchMove);
-      renderer.domElement.addEventListener("touchend", onTouchEnd);
-      renderer.domElement.addEventListener("touchstart", onTouchStart);
+      canvas.addEventListener("touchmove", onTouchMove);
+      canvas.addEventListener("touchend", onTouchEnd);
+      canvas.addEventListener("touchstart", onTouchStart);
     }
   });
 
@@ -82,6 +76,9 @@ export function enableDrawing(scene, camera, renderer, controls) {
       line = new THREE.Line(new THREE.BufferGeometry(), lineMaterial);
       line.name = "free-draw annotation";
       line.renderOrder = 999;
+      if (type.length > 0) {
+        line.cancerType = type;
+      }
       scene.add(line);
 
       currentPolygonPositions = []; // Start a new array for the current polygon's positions
@@ -90,7 +87,7 @@ export function enableDrawing(scene, camera, renderer, controls) {
 
   function onMouseMove(event) {
     if (isDrawing && mouseIsPressed) {
-      let point = getMousePosition(event.clientX, event.clientY, renderer.domElement, camera);
+      let point = getMousePosition(event.clientX, event.clientY, canvas, camera);
 
       // Check if it's the first vertex of the current polygon
       const isFirstVertex = currentPolygonPositions.length === 0;
@@ -142,10 +139,6 @@ export function enableDrawing(scene, camera, renderer, controls) {
 
       polygonPositions.push(currentPolygonPositions); // Store the current polygon's positions
 
-      if (type.length > 0) {
-        line.userData.text = window.cancerType;
-      }
-
       // toImageCoords(currentPolygonPositions, scene);
       // deleteIcon(event, line, scene);
       // textInputPopup(event, line);
@@ -163,6 +156,9 @@ export function enableDrawing(scene, camera, renderer, controls) {
       line = new THREE.Line(new THREE.BufferGeometry(), lineMaterial);
       line.name = "free-draw annotation";
       line.renderOrder = 999;
+      if (type.length > 0) {
+        line.cancerType = type;
+      }
       scene.add(line);
 
       currentPolygonPositions = []; // Start a new array for the current polygon's positions
@@ -172,7 +168,7 @@ export function enableDrawing(scene, camera, renderer, controls) {
   function onTouchMove(event) {
     if (isDrawing && mouseIsPressed) {
       let touch = event.touches[0];
-      let point = getMousePosition(touch.clientX, touch.clientY, renderer.domElement, camera);
+      let point = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
 
       // Check if it's the first vertex of the current polygon
       const isFirstVertex = currentPolygonPositions.length === 0;
@@ -223,10 +219,6 @@ export function enableDrawing(scene, camera, renderer, controls) {
       }
 
       polygonPositions.push(currentPolygonPositions); // Store the current polygon's positions
-
-      if (type.length > 0) {
-        line.userData.text = window.cancerType;
-      }
 
       currentPolygonPositions = []; // Clear the current polygon's array for the next drawing
     }

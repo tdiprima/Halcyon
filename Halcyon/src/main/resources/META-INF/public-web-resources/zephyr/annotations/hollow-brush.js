@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { createButton, textInputPopup, deleteIcon, turnOtherButtonsOff } from "../helpers/elements.js";
+import { createButton, turnOtherButtonsOff } from "../helpers/elements.js";
 import { getMousePosition } from "../helpers/mouse.js";
+import { getColorAndType } from "../helpers/colorPalette.js";
 
 export function hollowBrush(scene, camera, renderer, controls) {
   let brushSize = 100; // Size of the brush
@@ -8,6 +9,9 @@ export function hollowBrush(scene, camera, renderer, controls) {
   let isDrawing = false; // Flag to check if drawing is active
   let mouseIsPressed = false;
   let circles = []; // Array to store circle data for JSTS union
+  const canvas = renderer.domElement;
+  let color = "#0000ff"; // Default color
+  let type = "";
 
   let brushButton = createButton({
     id: "brushButton",
@@ -67,25 +71,27 @@ export function hollowBrush(scene, camera, renderer, controls) {
       isDrawing = false;
       controls.enabled = true;
       this.classList.replace('btnOn', 'annotationBtn');
-      renderer.domElement.removeEventListener('mousedown', onMouseDown);
-      renderer.domElement.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
+      canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('mousemove', onMouseMove);
+      canvas.removeEventListener('mouseup', onMouseUp);
 
-      renderer.domElement.removeEventListener('touchstart', onTouchStart);
-      renderer.domElement.removeEventListener('touchmove', onTouchMove);
-      renderer.domElement.removeEventListener('touchend', onTouchEnd);
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onTouchEnd);
     } else {
       isDrawing = true;
       turnOtherButtonsOff(brushButton);
       controls.enabled = false;
       this.classList.replace('annotationBtn', 'btnOn');
-      renderer.domElement.addEventListener('mousedown', onMouseDown);
-      renderer.domElement.addEventListener('mousemove', onMouseMove);
-      window.addEventListener('mouseup', onMouseUp);
+      ({ color, type } = getColorAndType());
 
-      renderer.domElement.addEventListener('touchstart', onTouchStart);
-      renderer.domElement.addEventListener('touchmove', onTouchMove);
-      renderer.domElement.addEventListener('touchend', onTouchEnd);
+      canvas.addEventListener('mousedown', onMouseDown);
+      canvas.addEventListener('mousemove', onMouseMove);
+      canvas.addEventListener('mouseup', onMouseUp);
+
+      canvas.addEventListener('touchstart', onTouchStart);
+      canvas.addEventListener('touchmove', onTouchMove);
+      canvas.addEventListener('touchend', onTouchEnd);
     }
   });
 
@@ -101,12 +107,12 @@ export function hollowBrush(scene, camera, renderer, controls) {
   // Function to draw the brush shape
   function onMouseMove(event) {
     if (isDrawing && mouseIsPressed) {
-      const point = getMousePosition(event.clientX, event.clientY, renderer.domElement, camera);
+      const point = getMousePosition(event.clientX, event.clientY, canvas, camera);
       if (point === null) return;
 
       // Create a Three.js circle at the intersection point
       const brushGeometry = new THREE.CircleGeometry(brushSize, 32);
-      const brushMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.1 });
+      const brushMaterial = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.1 });
       const brushCircle = new THREE.Mesh(brushGeometry, brushMaterial);
 
       brushCircle.position.set(point.x, point.y, 0);
@@ -151,12 +157,12 @@ export function hollowBrush(scene, camera, renderer, controls) {
   function onTouchMove(event) {
     if (isDrawing && mouseIsPressed) {
       const touch = event.touches[0];
-      const point = getMousePosition(touch.clientX, touch.clientY, renderer.domElement, camera);
+      const point = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
       if (point === null) return;
 
       // Create a Three.js circle at the intersection point
       const brushGeometry = new THREE.CircleGeometry(brushSize, 32);
-      const brushMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.1 });
+      const brushMaterial = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.1 });
       const brushCircle = new THREE.Mesh(brushGeometry, brushMaterial);
 
       brushCircle.position.set(point.x, point.y, 0);
@@ -232,13 +238,16 @@ export function hollowBrush(scene, camera, renderer, controls) {
     const coordinates = unionGeometry.getCoordinates();
     const points = coordinates.map(coord => new THREE.Vector3(coord.x, coord.y, 0));
     const lineGeometry = new THREE.BufferGeometry().setFromPoints(decimate(points));
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 5 });
+    const lineMaterial = new THREE.LineBasicMaterial({ color, linewidth: 5 });
 
     const line = new THREE.LineLoop(lineGeometry, lineMaterial); // Use LineLoop to close the shape
     line.name = "hollow annotation";
+    if (type.length > 0) {
+      line.cancerType = type;
+    }
     scene.add(line);
 
     // deleteIcon(event, line, scene);
-    textInputPopup(event, line);
+    // textInputPopup(event, line);
   }
 }

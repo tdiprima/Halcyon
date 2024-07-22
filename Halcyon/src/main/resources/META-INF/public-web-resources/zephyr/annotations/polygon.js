@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { createButton, textInputPopup, deleteIcon, turnOtherButtonsOff } from "../helpers/elements.js";
+import { createButton, turnOtherButtonsOff } from "../helpers/elements.js";
 import { getMousePosition } from "../helpers/mouse.js";
+import { getColorAndType } from "../helpers/colorPalette.js";
 
 export function polygon(scene, camera, renderer, controls) {
   const canvas = renderer.domElement;
@@ -9,10 +10,9 @@ export function polygon(scene, camera, renderer, controls) {
   let points = [];
   let currentPolygon = null;
   let lastTapTime = 0;
-
-  let material = new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 5 });
-  material.depthTest = false;
-  material.depthWrite = false;
+  let color = "#0000ff"; // Default color
+  let type = "";
+  let material;
 
   let polygonButton = createButton({
     id: "polygon",
@@ -37,6 +37,12 @@ export function polygon(scene, camera, renderer, controls) {
       turnOtherButtonsOff(polygonButton);
       controls.enabled = false;
       this.classList.replace('annotationBtn', 'btnOn');
+      ({ color, type } = getColorAndType());
+
+      material = new THREE.LineBasicMaterial({ color, linewidth: 5 });
+      material.depthTest = false;
+      material.depthWrite = false;
+
       canvas.addEventListener("mousedown", onMouseDown, false);
       canvas.addEventListener("mousemove", onMouseMove, false);
       canvas.addEventListener("mouseup", onMouseUp, false);
@@ -83,7 +89,7 @@ export function polygon(scene, camera, renderer, controls) {
       points.pop(); // Remove the duplicated point from double-click
       finalizeCurrentPolygon(); // Finalize and prepare for a new polygon
       // deleteIcon(event, currentPolygon, scene);
-      textInputPopup(event, currentPolygon);
+      // textInputPopup(event, currentPolygon);
     }
   }
 
@@ -130,6 +136,9 @@ export function polygon(scene, camera, renderer, controls) {
     let polygon = new THREE.LineLoop(geometry, material);
     polygon.renderOrder = 999;
     polygon.name = "polygon annotation";
+    if (type.length > 0) {
+      polygon.cancerType = type;
+    }
     scene.add(polygon);
     return polygon;
   }

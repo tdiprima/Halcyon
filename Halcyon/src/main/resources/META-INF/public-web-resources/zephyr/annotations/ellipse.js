@@ -1,13 +1,14 @@
 import * as THREE from 'three';
-import { createButton, textInputPopup, turnOtherButtonsOff } from "../helpers/elements.js";
+import { createButton, turnOtherButtonsOff } from "../helpers/elements.js";
 import { getMousePosition } from "../helpers/mouse.js";
+import { getColorAndType } from "../helpers/colorPalette.js";
 
 export function ellipse(scene, camera, renderer, controls) {
   const canvas = renderer.domElement;
-  let material = new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 5 });
-  material.depthTest = false;
-  material.depthWrite = false;
+  let material;
   let segments = 64; // 64 line segments is a common choice
+  let color = "#0000ff"; // Default color
+  let type = "";
 
   let isDrawing = false;
   let mouseIsPressed = false;
@@ -38,6 +39,11 @@ export function ellipse(scene, camera, renderer, controls) {
       turnOtherButtonsOff(ellipseButton);
       controls.enabled = false;
       this.classList.replace('annotationBtn', 'btnOn');
+      ({ color, type } = getColorAndType());
+
+      material = new THREE.LineBasicMaterial({ color, linewidth: 5 });
+      material.depthTest = false;
+      material.depthWrite = false;
 
       canvas.addEventListener("mousedown", onMouseDown, false);
       canvas.addEventListener("mousemove", onMouseMove, false);
@@ -70,7 +76,7 @@ export function ellipse(scene, camera, renderer, controls) {
       endPoint = getMousePosition(event.clientX, event.clientY, canvas, camera);
       updateEllipse();
       // deleteIcon(event, currentEllipse, scene);
-      textInputPopup(event, currentEllipse);
+      // textInputPopup(event, currentEllipse);
       // console.log("currentEllipse:", currentEllipse);
     }
   }
@@ -110,6 +116,9 @@ export function ellipse(scene, camera, renderer, controls) {
     let ellipse = new THREE.LineLoop(geometry, material);
     ellipse.renderOrder = 999;
     ellipse.name = "ellipse annotation";
+    if (type.length > 0) {
+      ellipse.cancerType = type;
+    }
     scene.add(ellipse);
     return ellipse;
   }
