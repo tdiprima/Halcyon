@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {createSlider, createButton} from "./elements.js";
+import { createSlider, createButton } from "./elements.js";
 
 /**
  * Function to handle brightness and contrast adjustment for a 3D scene.
@@ -90,9 +90,9 @@ export function brightContrast(scene) {
     const texture = mesh.material.map;
     const customShaderMaterial = new THREE.ShaderMaterial({
       uniforms: {
-        myTexture: {value: texture},
-        contrast: {value: contrast},
-        brightness: {value: brightness}
+        myTexture: { value: texture },
+        contrast: { value: contrast },
+        brightness: { value: brightness }
       },
       vertexShader: `
       varying vec2 vUv;

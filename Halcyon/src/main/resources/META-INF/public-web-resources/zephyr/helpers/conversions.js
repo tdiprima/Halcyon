@@ -171,3 +171,26 @@ export function calculatePolygonPerimeter(positions, camera, renderer) {
 
   return perimeter;
 }
+
+/**
+ * Improve raycasting by converting to line
+ */
+export function convertLineLoopToLine(lineLoop, name, cancerType) {
+  const geometry = new THREE.BufferGeometry();
+  const positions = lineLoop.geometry.attributes.position.array;
+  const vertices = new Float32Array(positions.length + 3);
+  vertices.set(positions);
+
+  // Add the first point at the end to close the loop
+  vertices[positions.length] = positions[0];
+  vertices[positions.length + 1] = positions[1];
+  vertices[positions.length + 2] = positions[2];
+
+  geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+  const line = new THREE.Line(geometry, lineLoop.material);
+  line.name = `${name} annotation`;
+  if (cancerType.length > 0) {
+    line.userData.cancerType = cancerType;
+  }
+  return line;
+}

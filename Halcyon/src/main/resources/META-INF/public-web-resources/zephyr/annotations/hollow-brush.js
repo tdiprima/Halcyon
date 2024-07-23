@@ -243,11 +243,8 @@ export function hollowBrush(scene, camera, renderer, controls) {
     const line = new THREE.LineLoop(lineGeometry, lineMaterial); // Use LineLoop to close the shape
     line.name = "hollow annotation";
     if (type.length > 0) {
-      line.cancerType = type;
+      line.userData.cancerType = type;
     }
     scene.add(line);
-
-    // deleteIcon(event, line, scene);
-    // textInputPopup(event, line);
   }
 }

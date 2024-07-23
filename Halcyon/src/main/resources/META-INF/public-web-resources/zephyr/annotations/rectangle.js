@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { createButton, removeObject, turnOtherButtonsOff} from "../helpers/elements.js";
+import { createButton, removeObject, turnOtherButtonsOff } from "../helpers/elements.js";
 import { getMousePosition } from "../helpers/mouse.js";
-import { worldToImageCoordinates, getUrl } from "../helpers/conversions.js";
+import { worldToImageCoordinates, getUrl, convertLineLoopToLine } from "../helpers/conversions.js";
 import { getColorAndType } from "../helpers/colorPalette.js";
 
 export function rectangle(scene, camera, renderer, controls, options) {
@@ -85,10 +85,11 @@ export function rectangle(scene, camera, renderer, controls, options) {
         getIIIF();
         removeObject(currentRectangle);
       } else {
-        // deleteIcon(event, currentRectangle, scene);
-        // textInputPopup(event, currentRectangle);
+        const line = convertLineLoopToLine(currentRectangle, "rectangle", type);
+        scene.add(line);
+        scene.remove(currentRectangle);
+        currentRectangle = null;
       }
-      // console.log("currentRectangle:", currentRectangle);
     }
   }
 
@@ -120,23 +121,23 @@ export function rectangle(scene, camera, renderer, controls, options) {
         getIIIF();
         removeObject(currentRectangle);
       } else {
-        // textInputPopup(event, currentRectangle);
+        const line = convertLineLoopToLine(currentRectangle, "rectangle", type);
+        scene.add(line);
+        scene.remove(currentRectangle);
+        currentRectangle = null;
       }
     }
   }
 
   function createRectangle() {
     let geometry = new THREE.BufferGeometry();
-    let vertices = new Float32Array(12);
+    let vertices = new Float32Array(15); // 4 vertices + 1 to close the loop (5 * 3)
+    // let vertices = new Float32Array(12);
     geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
 
     // LineLoop: A continuous line that connects back to the start.
     let rect = new THREE.LineLoop(geometry, material);
     rect.renderOrder = 999;
-    rect.name = "rectangle annotation";
-    if (type.length > 0) {
-      rect.cancerType = type;
-    }
     scene.add(rect);
 
     return rect;
@@ -148,22 +149,30 @@ export function rectangle(scene, camera, renderer, controls, options) {
     positions[0] = startPoint.x;
     positions[1] = startPoint.y;
     positions[2] = startPoint.z;
+
     positions[3] = endPoint.x;
     positions[4] = startPoint.y;
     positions[5] = startPoint.z;
+
     positions[6] = endPoint.x;
     positions[7] = endPoint.y;
     positions[8] = startPoint.z;
+
     positions[9] = startPoint.x;
     positions[10] = endPoint.y;
     positions[11] = startPoint.z;
+
+    // Close the loop by setting the last point to the first point
+    positions[12] = startPoint.x;
+    positions[13] = startPoint.y;
+    positions[14] = startPoint.z;
+
     currentRectangle.geometry.attributes.position.needsUpdate = true;
   }
 
   function getIIIF() {
     const vertices = currentRectangle.geometry.attributes.position.array;
     const imgCoords = worldToImageCoordinates(vertices, scene);
-    // console.log("imgCoords:", imgCoords);
 
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
 
@@ -179,8 +188,6 @@ export function rectangle(scene, camera, renderer, controls, options) {
 
     const width = maxX - minX;
     const height = maxY - minY;
-
-    // console.log({minX, maxX, minY, maxY, width, height});
 
     let url = getUrl(scene);
     if (url) {

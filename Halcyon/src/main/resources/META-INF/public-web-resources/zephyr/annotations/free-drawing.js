@@ -77,7 +77,7 @@ export function enableDrawing(scene, camera, renderer, controls) {
       line.name = "free-draw annotation";
       line.renderOrder = 999;
       if (type.length > 0) {
-        line.cancerType = type;
+        line.userData.cancerType = type;
       }
       scene.add(line);
 
@@ -157,7 +157,7 @@ export function enableDrawing(scene, camera, renderer, controls) {
       line.name = "free-draw annotation";
       line.renderOrder = 999;
       if (type.length > 0) {
-        line.cancerType = type;
+        line.userData.cancerType = type;
       }
       scene.add(line);
 

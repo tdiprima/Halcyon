@@ -1,6 +1,7 @@
 // Export JSON, import JSON
 import * as THREE from 'three';
 import { createButton } from "./elements.js";
+import { getUrl } from "./conversions.js"
 
 /**
  * Save annotations
@@ -50,8 +51,10 @@ export function save(scene) {
     });
 
     // TODO: save serializedObjects to database
+    serializedObjects.image = getUrl(scene);
+    serializedObjects.type = "hal:Annotation";
     console.log(serializedObjects);
-    console.log(JSON.stringify(serializedObjects));
+    // console.log(JSON.stringify(serializedObjects));
     alert('Scene serialized successfully. Check console for details.');
   }
 

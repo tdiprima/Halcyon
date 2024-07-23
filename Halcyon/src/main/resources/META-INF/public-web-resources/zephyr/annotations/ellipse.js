@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { createButton, turnOtherButtonsOff } from "../helpers/elements.js";
 import { getMousePosition } from "../helpers/mouse.js";
 import { getColorAndType } from "../helpers/colorPalette.js";
+import { convertLineLoopToLine } from "../helpers/conversions.js";
 
 export function ellipse(scene, camera, renderer, controls) {
   const canvas = renderer.domElement;
@@ -75,9 +76,10 @@ export function ellipse(scene, camera, renderer, controls) {
       mouseIsPressed = false;
       endPoint = getMousePosition(event.clientX, event.clientY, canvas, camera);
       updateEllipse();
-      // deleteIcon(event, currentEllipse, scene);
-      // textInputPopup(event, currentEllipse);
-      // console.log("currentEllipse:", currentEllipse);
+      const line = convertLineLoopToLine(currentEllipse, "ellipse", type);
+      scene.add(line);
+      scene.remove(currentEllipse); // Remove the original LineLoop
+      currentEllipse = null; // Clear current ellipse reference
     }
   }
 
@@ -104,7 +106,10 @@ export function ellipse(scene, camera, renderer, controls) {
       let touch = event.changedTouches[0];
       endPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
       updateEllipse();
-      // textInputPopup(event, currentEllipse);
+      const line = convertLineLoopToLine(currentEllipse, "ellipse", type);
+      scene.add(line);
+      scene.remove(currentEllipse); // Remove the original LineLoop
+      currentEllipse = null; // Clear current ellipse reference
     }
   }
 
@@ -115,10 +120,6 @@ export function ellipse(scene, camera, renderer, controls) {
     geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
     let ellipse = new THREE.LineLoop(geometry, material);
     ellipse.renderOrder = 999;
-    ellipse.name = "ellipse annotation";
-    if (type.length > 0) {
-      ellipse.cancerType = type;
-    }
     scene.add(ellipse);
     return ellipse;
   }

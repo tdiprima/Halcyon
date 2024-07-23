@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { createButton, turnOtherButtonsOff } from "../helpers/elements.js";
 import { getMousePosition } from "../helpers/mouse.js";
 import { getColorAndType } from "../helpers/colorPalette.js";
+import { convertLineLoopToLine } from "../helpers/conversions.js";
 
 export function polygon(scene, camera, renderer, controls) {
   const canvas = renderer.domElement;
@@ -88,8 +89,6 @@ export function polygon(scene, camera, renderer, controls) {
       mouseIsPressed = false;
       points.pop(); // Remove the duplicated point from double-click
       finalizeCurrentPolygon(); // Finalize and prepare for a new polygon
-      // deleteIcon(event, currentPolygon, scene);
-      // textInputPopup(event, currentPolygon);
     }
   }
 
@@ -128,6 +127,11 @@ export function polygon(scene, camera, renderer, controls) {
 
   function finalizeCurrentPolygon() {
     updatePolygon();
+    if (currentPolygon) {
+      const line = convertLineLoopToLine(currentPolygon, "polygon", type);
+      scene.add(line);
+      scene.remove(currentPolygon);
+    }
     resetDrawingState();
   }
 
@@ -135,10 +139,6 @@ export function polygon(scene, camera, renderer, controls) {
     let geometry = new THREE.BufferGeometry();
     let polygon = new THREE.LineLoop(geometry, material);
     polygon.renderOrder = 999;
-    polygon.name = "polygon annotation";
-    if (type.length > 0) {
-      polygon.cancerType = type;
-    }
     scene.add(polygon);
     return polygon;
   }
