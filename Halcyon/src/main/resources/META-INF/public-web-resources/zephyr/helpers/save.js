@@ -12,7 +12,7 @@ export function save(scene) {
   createButton({
     id: "save",
     innerHtml: "<i class=\"fas fa-save\"></i>",
-    title: "save"
+    title: "Save"
   }).addEventListener("click", function () {
     serializeScene(scene);
   });

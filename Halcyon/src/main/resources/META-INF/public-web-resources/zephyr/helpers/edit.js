@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { createButton, textInputPopup, turnOtherButtonsOff } from "./elements.js";
+import { createButton, turnOtherButtonsOff } from "./elements.js";
 import { DragControls } from "three/addons/controls/DragControls.js";
 
 /**
@@ -8,6 +8,10 @@ import { DragControls } from "three/addons/controls/DragControls.js";
 export function edit(scene, camera, renderer, controls, originalZ) {
   let clicked = false;
   let intersectableObjects = [];
+  let dragControls;
+  let handles = [];
+  let currentMesh = null;
+
   let editButton = createButton({
     id: "edit",
     innerHtml: "<i class=\"fas fa-edit\"></i>",
@@ -132,20 +136,32 @@ export function edit(scene, camera, renderer, controls, originalZ) {
 
       if (intersects.length > 0) {
         const selectedMesh = intersects[0].object;
-        // console.log("selectedMesh", selectedMesh);
 
         // Setup deletion button & edit handles
         setupDeletionButton(selectedMesh, addEditHandles(selectedMesh, size));
-        // textInputPopup(event, selectedMesh);
-        // We've got it; shut this off, so we don't keep adding these elements
-        // renderer.domElement.removeEventListener('click', onMouseClick, false);
       }
     } catch (error) {
       console.error("Intersection error:", error);
     }
   }
 
+  // Handler function for drag events
+  function dragHandler(event) {
+    const position = event.object.position;
+    const index = handles.indexOf(event.object);
+
+    // When a handle is dragged, update the position of the corresponding vertex in the buffer attribute
+    if (currentMesh && currentMesh.geometry.attributes.position) {
+      currentMesh.geometry.attributes.position.setXYZ(index, position.x, position.y, position.z);
+      // Notify Three.js to update the geometry
+      currentMesh.geometry.attributes.position.needsUpdate = true;
+    }
+  }
+
   function addEditHandles(mesh, size) {
+    // Store the current mesh for reference in the drag handler
+    currentMesh = mesh;
+
     // Ensure the mesh's world matrix is up-to-date
     mesh.updateMatrixWorld(true);
 
@@ -160,7 +176,7 @@ export function edit(scene, camera, renderer, controls, originalZ) {
     }
 
     // Create handles for each vertex
-    const handles = [];
+    handles = [];
     for (let i = 0; i < vertices.length; i += 3) {
       const handleGeometry = new THREE.SphereGeometry(size);
       const handleMaterial = new THREE.MeshBasicMaterial({ color });
@@ -174,28 +190,9 @@ export function edit(scene, camera, renderer, controls, originalZ) {
     handles.forEach(element => scene.add(element));
 
     // Create DragControls
-    const dragControls = new DragControls(handles, camera, renderer.domElement);
+    dragControls = new DragControls(handles, camera, renderer.domElement);
 
-    // dragControls.addEventListener("dragstart", function (event) {
-    //   // Set color of handle when dragging starts
-    //   event.object.material.color.set(0x00ffff);
-    // });
-
-    // dragControls.addEventListener("dragend", function (event) {
-    //   // Set color of handle when dragging ends
-    //   event.object.material.color.set(0x0000ff);
-    // });
-
-    dragControls.addEventListener("drag", function (event) {
-      const position = event.object.position;
-      const index = handles.indexOf(event.object);
-
-      // When a handle is dragged, update the position of the corresponding vertex in the buffer attribute
-      mesh.geometry.attributes.position.setXYZ(index, position.x, position.y, position.z);
-
-      // Notify Three.js to update the geometry
-      mesh.geometry.attributes.position.needsUpdate = true;
-    });
+    dragControls.addEventListener("drag", dragHandler);
 
     return handles;
   }
@@ -207,14 +204,14 @@ export function edit(scene, camera, renderer, controls, originalZ) {
       document.body.removeChild(div);
     });
 
+    // Remove drag event listener and handles
+    if (dragControls) {
+      dragControls.removeEventListener("drag", dragHandler);
+      dragControls = null;
+    }
+
     // Remove edit handles
     removeHandles();
-
-    // Remove elements with class 'popup'
-    // const popups = document.querySelectorAll('.popup');
-    // popups.forEach(popup => {
-    //   popup.remove();
-    // });
   }
 
   function getAnnotationsForEdit() {
@@ -224,22 +221,19 @@ export function edit(scene, camera, renderer, controls, originalZ) {
         intersectableObjects.push(object);
       }
     });
-    // console.log("intersectableObjects", intersectableObjects);
   }
 
-  function removeHandles(handles) {
+  function removeHandles() {
     let objectsToRemove = [];
-    if (handles) {
-      handles.forEach(function (element) {
-        objectsToRemove.push(element);
-      });
-    } else {
-      scene.traverse((object) => {
-        if (object.name.includes("handle")) {
-          objectsToRemove.push(object);
-        }
-      });
-    }
+    scene.traverse((object) => {
+      if (object.name.includes("handle")) {
+        objectsToRemove.push(object);
+      }
+    });
     objectsToRemove.forEach(object => removal(object));
+
+    // Clear the handles array
+    handles = [];
+    currentMesh = null;
   }
 }
