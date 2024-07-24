@@ -22,17 +22,23 @@ public class LDPServer extends DefaultServlet {
         logger.trace("{} ----> {}",request.getRequestURI(),request.getContentType());
         String accept = request.getHeader("Accept");
         switch (accept) {
-            case "text/turtle":
-            case "application/ld+json":
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.setContentType("text/turtle");
-                Lang lang = accept.equals("text/turtle")?Lang.TURTLE:Lang.JSONLD;
+            case "application/n-triples":
                 try (ServletOutputStream out = response.getOutputStream()) {
-                    if (lang.equals(Lang.TURTLE)) {
-                        RDFDataMgr.write(out, Tools.getRDF(request), lang);
-                    } else if (lang.equals(Lang.JSONLD)) {
-                        Tools.Annotations2JSONLD(Tools.getRDF(request), out);
-                    }
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.setContentType(accept);
+                    RDFDataMgr.write(out, Tools.getRDF(request), Lang.NTRIPLES);
+                }
+                break;
+            case "text/turtle":
+                try (ServletOutputStream out = response.getOutputStream()) {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.setContentType(accept);
+                    RDFDataMgr.write(out, Tools.getRDF(request), Lang.TURTLE);
+                }
+                break;
+            case "application/ld+json":
+                try (ServletOutputStream out = response.getOutputStream()) {
+                    Tools.Annotations2JSONLD(Tools.getRDF(request), out);
                 }
                 break;
             case null:
@@ -98,18 +104,3 @@ public class LDPServer extends DefaultServlet {
         }
     }
 }
-
-
-                /*
-            case "application/json":
-                Optional<URI> x = PathMapper.getPathMapper().http2file(request.getRequestURI());
-                if (x.isPresent()) {
-                    URI dest = x.get();
-                    File file = new File(dest.getPath().substring(1));
-                    try (FileInputStream fis = new FileInputStream(file)) {
-                        response.setStatus(HttpServletResponse.SC_OK);
-                        response.setContentType("application/json");
-                        IOUtils.copy(fis, response.getOutputStream());
-                    }
-                }                
-                break;*/
