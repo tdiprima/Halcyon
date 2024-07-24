@@ -13,10 +13,8 @@ import com.apicatalog.rdf.RdfDataset;
 import com.ebremer.halcyon.data.DataCore;
 import com.ebremer.halcyon.server.utils.PathMapper;
 import com.ebremer.halcyon.utils.HalJsonLD;
-import com.ebremer.ns.GEO;
 import com.ebremer.ns.HAL;
 import com.ebremer.ns.LDP;
-import com.ebremer.ns.SNO;
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
@@ -34,6 +32,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -51,8 +54,8 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.system.JenaTitanium;
 import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.XSD;
 
 /**
  *
@@ -71,13 +74,23 @@ public class Tools {
                     URI dest = x.get();
                     File file = new File(dest.getPath().substring(1));
                     file.getParentFile().mkdirs();
-                    Model m = ModelFactory.createDefaultModel();                
-                    m.createResource(name).addProperty(HAL.annotation, 
-                        m.createResource(uri)
+                    Model m = ModelFactory.createDefaultModel();  
+                    Resource anno = m.createResource(uri)
                             .addProperty(RDF.type, LDP.NonRDFSource)
                             .addProperty(RDF.type, m.createResource("http://www.w3.org/ns/iana/media-types/application/json#Resource"))
                             .addProperty(RDF.type, HAL.Annotation)
-                    );
+                            .addLiteral(m.createProperty("http://www.w3.org/ns/posix/stat#mtime"), file.lastModified()/1000)
+                            .addLiteral(m.createProperty("http://www.w3.org/ns/posix/stat#size"), file.length());
+                    m.createResource(name).addProperty(HAL.annotation, anno );
+                    BasicFileAttributes attrs;
+                    try {
+                        attrs = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+                        Instant instant = attrs.lastModifiedTime().toInstant();
+                        String isoDateTime = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("UTC")).format(instant);
+                        anno.addProperty(DCTerms.modified, isoDateTime);
+                    } catch (IOException ex) {
+                        Logger.getLogger(Tools.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     try (FileOutputStream fos = new FileOutputStream(file)) {
                         fos.write(data.getBytes());
                     } catch (FileNotFoundException ex) {
@@ -92,7 +105,11 @@ public class Tools {
                     ds.end();
                 }
             }
-        }            
+        }
+    }
+    
+    public static void AddnonLDPResourceMeta(Resource r) {
+        
     }
     
     public static Prefer getPreferHeader(HttpServletRequest request) {
