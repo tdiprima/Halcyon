@@ -12,7 +12,7 @@ export function save(scene) {
   createButton({
     id: "save",
     innerHtml: "<i class=\"fas fa-save\"></i>",
-    title: "save"
+    title: "Save"
   }).addEventListener("click", function () {
     serializeScene(scene);
   });
@@ -55,7 +55,7 @@ export function save(scene) {
     serializedObjects.type = "hal:Annotation";
     console.log(serializedObjects);
     // console.log(JSON.stringify(serializedObjects));
-    alert('Scene serialized successfully. Check console for details.');
+    alert('Scene serialized successfully.');
   }
 
   //*******************************
@@ -114,13 +114,16 @@ export function deserializeScene(scene, serializedObjects) {
   const loader = new THREE.ObjectLoader();
 
   serializedObjects.forEach(serializedData => {
-    // Assuming serializedData is the JSON object for each object
-    // If serializedData is a string, parse it first: const json = JSON.parse(serializedData);
+    if (typeof serializedData === 'string') {
+      // If serializedData is a string, parse it first
+      serializedData = JSON.parse(serializedData);
+    }
+
+    // Deserialize the object
     const object = loader.parse(serializedData);
 
     // Add the deserialized object to the scene
     scene.add(object);
   });
 
-  console.log('Objects deserialized and added to the scene.');
 }
