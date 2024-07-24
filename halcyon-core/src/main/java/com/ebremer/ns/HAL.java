@@ -56,7 +56,9 @@ public class HAL {
     public static final Resource ColorByClassID = m.createResource(NS+"ColorByClassID");
     public static final Resource ColorScheme = m.createResource(NS+"ColorScheme");
     public static final Resource ResourceHandler = m.createResource(NS+"ResourceHandler");
+    public static final Resource Annotation = m.createResource(NS+"Annotation");
     
+    public static final Property annotation = m.createProperty(NS+"annotation");
     public static final Property hasResourceHandler = m.createProperty(NS+"hasResourceHandler");
     public static final Property urlPath = m.createProperty(NS+"urlPath");
     public static final Property resourceBase = m.createProperty(NS+"resourceBase");

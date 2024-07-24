@@ -10,12 +10,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Erich Bremer
  */
 public class IIIFProcessor {
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(IIIFProcessor.class);
     //private static final Pattern PATTERN1 = Pattern.compile("(.*)?/(\\d*),(\\d*),(\\d*),(\\d*)/(\\d*),/(\\d*)/default.(jpg|png|json|ttl)");
     private static final Pattern PATTERN1 =   Pattern.compile("(.*)?/(\\d*),(\\d*),(\\d*),(\\d*)/([!0-9,]*)/(\\d*)/default.(jpg|png|json|ttl)");
     private static final Pattern PATTERN2 = Pattern.compile("(.*)?/full/(\\d*),/(\\d*)/default.(jpg|png|json)");
@@ -69,13 +71,11 @@ public class IIIFProcessor {
             matcher = INFO.matcher(url);
             if (matcher.find()) {
                 String xw = matcher.group(1);
-                //System.out.println("info request --> "+w);
                 inforequest = true;
                 uri = new URI(xw.replace(" ", "%20"));
             } else {
                 matcher = PATTERN2.matcher(url);
                 if (matcher.find()) {
-                    System.out.println("it's a default req");
                     tilerequest = true;
                     uri = new URI(matcher.group(1));
                     x = 0;

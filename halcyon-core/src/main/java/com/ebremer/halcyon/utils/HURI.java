@@ -1,4 +1,4 @@
-package com.ebremer.halcyon.filesystem;
+package com.ebremer.halcyon.utils;
 
 import java.io.File;
 import java.net.URI;

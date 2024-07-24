@@ -1,5 +1,6 @@
 package com.ebremer.halcyon.server.utils;
 
+import com.ebremer.halcyon.lib.OperatingSystemInfo;
 import com.ebremer.ns.HAL;
 import com.ebremer.ns.LDP;
 import java.io.File;
@@ -53,6 +54,7 @@ public final class HalcyonSettings {
     public static final int DEFAULTHTTPPORT = 8888;
     public static final int DEFAULTHTTPSPORT = 9999;
     public static final int DEFAULTSPARQLPORT = 8887;
+    public static final int DEFAULTFILEPROCESSORTHREEADS = 4;
     public static final String DEFAULTHOSTNAME = "http://localhost";
     public static final String DEFAULTHOSTIP = "0.0.0.0";
     public static final String VERSION = "1.1.0";
@@ -115,13 +117,12 @@ public final class HalcyonSettings {
     }
     
     public String getAuthServer() {
-        String qs = "prefix : <"+HAL.NS+"> select ?AuthServer where {?s :AuthServer ?AuthServer}";
-        Query query = QueryFactory.create(qs);
-        QueryExecution qe = QueryExecutionFactory.create(query,m);
+        ParameterizedSparqlString pss = new ParameterizedSparqlString("select ?AuthServer where {?s :AuthServer ?AuthServer}");
+        pss.setNsPrefix("", HAL.NS);
+        QueryExecution qe = QueryExecutionFactory.create(pss.toString(),m);
         ResultSet results = qe.execSelect();
         if (results.hasNext()) {
-            QuerySolution sol = results.nextSolution();
-            return sol.get("AuthServer").asLiteral().getString();
+            return results.nextSolution().get("AuthServer").asLiteral().getString();
         }
         return DEFAULTHOSTNAME+":"+DEFAULTHTTPPORT;
     }
@@ -142,6 +143,12 @@ public final class HalcyonSettings {
     
     public long getReaderPoolScanRate() {
         return ReaderPoolScanRate;
+    }
+    
+    public boolean IsFileScanDisabled() {
+        ParameterizedSparqlString pss = new ParameterizedSparqlString("ask where {?s hal:fileScanDisabled true}");
+        pss.setNsPrefix("hal", HAL.NS);
+        return QueryExecutionFactory.create(pss.toString(),m).execAsk();
     }
     
     public static HalcyonSettings getSettings() {
@@ -178,6 +185,18 @@ public final class HalcyonSettings {
         return null;
     }
 
+    public int GetNumberOfFileProcessorThreads() {
+        ParameterizedSparqlString pss = new ParameterizedSparqlString( "select ?threads where {?s :fileProcessors ?threads}");
+        pss.setNsPrefix("", HAL.NS);
+        QueryExecution qe = QueryExecutionFactory.create(pss.toString(),m);
+        ResultSet results = qe.execSelect();
+        if (results.hasNext()) {
+            QuerySolution sol = results.nextSolution();
+            return sol.get("threads").asLiteral().getInt();
+        }
+        return DEFAULTFILEPROCESSORTHREEADS;
+    }
+    
     public int GetSPARQLPort() {
         ParameterizedSparqlString pss = new ParameterizedSparqlString( "select ?port where {?s :SPARQLport ?port}");
         pss.setNsPrefix("", HAL.NS);
@@ -223,8 +242,11 @@ public final class HalcyonSettings {
                 ResourceHandler rh = new ResourceHandler(srcbase, sol.get("urlPath").asLiteral().getString());
                 list.add(rh);
                 if (!http2fileMappings.containsKey(rh.urlPath())) {
-                    http2fileMappings.put(rh.urlPath(), rh.resourceBase().getPath());
-                    file2httpMappings.put(rh.resourceBase().getPath(), rh.urlPath());
+                    URI whoa = rh.resourceBase();
+                    String temp = whoa.getPath();
+                    String correctedOSPath = OperatingSystemInfo.ifWindows()?temp.substring(1):temp;
+                    http2fileMappings.put(rh.urlPath(),correctedOSPath);
+                    file2httpMappings.put(correctedOSPath,rh.urlPath());
                 }
             } catch (URISyntaxException ex) {
                 Logger.getLogger(HalcyonSettings.class.getName()).log(Level.SEVERE, null, ex);

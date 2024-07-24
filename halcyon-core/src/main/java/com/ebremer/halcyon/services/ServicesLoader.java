@@ -6,10 +6,11 @@ import java.util.ServiceLoader;
 
 
 public class ServicesLoader {
-    private final ServiceLoader<Service> serviceLoader;
+    private ServiceLoader<Service> serviceLoader = null;
     private final List<Service> plugins = new ArrayList<>();
+    private static ServicesLoader servicesloader = null;
 
-    public ServicesLoader() {
+    private ServicesLoader() {
         System.out.println("Starting Service Loader...");
         serviceLoader = ServiceLoader.load(Service.class);
         for (Service plugin : serviceLoader) {
@@ -20,5 +21,16 @@ public class ServicesLoader {
 
     public List<Service> getPlugins() {
         return plugins;
+    }
+    
+    public static void init() {
+        if (servicesloader==null) {
+            servicesloader = new ServicesLoader();
+        }
+    }
+    
+    public static ServicesLoader getInstance() {
+        init();
+        return servicesloader;
     }
 }

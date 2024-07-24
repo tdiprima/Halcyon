@@ -6,7 +6,7 @@ import com.ebremer.halcyon.wicket.BasePage;
  *
  * @author erich
  */
-public class About extends BasePage {
+public class Blank extends BasePage {
     
-    public About() {}
+    public Blank() {}
 }

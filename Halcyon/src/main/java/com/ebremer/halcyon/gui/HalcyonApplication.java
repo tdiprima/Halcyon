@@ -62,7 +62,7 @@ public class HalcyonApplication extends WebApplication {
     @Override
     public void init() {
 	super.init();
-        FileReaderFactoryProvider.contains("yay");           
+        //FileReaderFactoryProvider.contains("yay");           
         this.getRequestLoggerSettings().setRequestLoggerEnabled(true);
         this.getRequestLoggerSettings().setRecordSessionSize(true);
         getCspSettings().blocking().disabled();
@@ -85,6 +85,7 @@ public class HalcyonApplication extends WebApplication {
         mountPage("/viewall", ViewAll.class); 
         mountPage("/testviewall", TestViewAll.class); 
         mountPage("/puffin", Puffin.class); 
+        mountPage("/blank", Blank.class); 
 
         mountPage("/zephyrx", Zephyr.class);
         mountPage("/zephyrx2", Zephyr2.class);

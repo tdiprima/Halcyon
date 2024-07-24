@@ -84,9 +84,10 @@
 	<infinispan.version>15.0.5.Final</infinispan.version>
 	<resteasy.version>6.2.9.Final</resteasy.version>
 	<liquibase.version>4.27.0</liquibase.version>
+        <micrometer.version>1.13.1</micrometer.version>  <!--1.10.-->
         <jetty.version>12.0.10</jetty.version>
         <h2.version>2.2.224</h2.version>
-        <jena.version>5.0.0</jena.version>
+        <jena.version>5.1.0</jena.version>
         <wicket.ver>10.1.0</wicket.ver>
         <beakgraph.version>0.9.0</beakgraph.version>        
         <hilbert.ver>0.2.3</hilbert.ver>
@@ -97,7 +98,7 @@
         <!--<dcm4che.ver>5.31.2</dcm4che.ver>-->
         <shiro.version>2.0.1</shiro.version>
         <jts.version>1.19.0</jts.version>
-        <twelvemonkeys.version>3.10.1</twelvemonkeys.version>
+        <twelvemonkeys.version>3.11.0</twelvemonkeys.version>
         <jcommander.version>1.83</jcommander.version>
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
@@ -165,6 +166,11 @@
                 <artifactId>jena-fuseki-main</artifactId>
                 <version>${jena.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-registry-prometheus</artifactId>
+                <version>${micrometer.version}</version>
+            </dependency>            
             <dependency>
                 <groupId>com.github.ben-manes.caffeine</groupId>
                 <artifactId>caffeine</artifactId>

@@ -96,7 +96,7 @@ public class HalJsonLD {
             Logger.getLogger(HalJsonLD.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     public static void main(String args[]) throws FileNotFoundException, JsonLdError {
         Model mx = ModelFactory.createDefaultModel();
         FileInputStream fis = new FileInputStream("sample.ttl");

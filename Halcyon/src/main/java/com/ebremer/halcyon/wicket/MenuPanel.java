@@ -2,6 +2,7 @@ package com.ebremer.halcyon.wicket;
 
 import com.ebremer.halcyon.server.utils.HalcyonSettings;
 import com.ebremer.halcyon.datum.HalcyonPrincipal;
+import com.ebremer.halcyon.gui.Blank;
 import com.ebremer.halcyon.gui.HalcyonSession;
 import com.ebremer.halcyon.gui.LogoutLink;
 import com.ebremer.halcyon.sparql.Sparql;
@@ -37,7 +38,7 @@ public class MenuPanel extends Panel {
             @Override
             public void onClick() {
                 getSession().invalidate();
-                setResponsePage(Sparql.class);
+                setResponsePage(Blank.class);
             }
         };
         LogoutLink logout = new LogoutLink("logoutLink");

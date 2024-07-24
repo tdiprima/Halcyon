@@ -51,7 +51,7 @@ public abstract class AbstractLDModel<T> extends ChainingModel<T> {
             Model m = (Model) target;
             Triple triple = tripleExpression();
             Statement before = m.asStatement(triple);
-            Node oo = NodeFactory.createLiteral((String) object);
+            Node oo = NodeFactory.createLiteralString((String) object);
             Statement after = m.asStatement(Triple.create(triple.getSubject(),triple.getPredicate(),oo));
             m.remove(before);
             m.add(after);

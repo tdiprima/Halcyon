@@ -100,10 +100,6 @@ public class HalcyonPrincipal implements Principal, Serializable {
         return useruri;
     }
     
-    //public String getURNUUID() {
-//        return URNuuid;
-  //  }
-    
     public String getToken() {
         return token;
     }
