@@ -47,13 +47,12 @@ import org.pac4j.oidc.profile.OidcProfile;
 public final class HalcyonSession extends WebSession {
     private String user;
     private String mv;
-   // private final String uuid;
-    //private final String uuidurn;
     private final String userURI;
     private final HalcyonPrincipal principal;
 
     public HalcyonSession(Request request, org.apache.wicket.request.Response response) {
-        super(request);        
+        super(request);
+        System.out.println("Creating Session...");
         ServletWebRequest req = (ServletWebRequest) request;
         HttpServletRequest servletRequest = (HttpServletRequest) req.getContainerRequest();        
         WebResponse webResponse = (WebResponse) response;
@@ -69,14 +68,11 @@ public final class HalcyonSession extends WebSession {
             OidcProfile oidcProfile = (OidcProfile) profile.get();
             String jwt = oidcProfile.getAccessToken().getValue();
             JwtToken haha = new JwtToken(jwt);
-            //uuid = haha.getPrincipal().getUserURI();
-            //uuidurn = haha.getPrincipal().getURNUUID();
             userURI = haha.getPrincipal().getUserURI();
             principal = new HalcyonPrincipal(haha,false);
         } else {
             System.out.println("HalcyonSession Profile not present!!!!");
             userURI = "urn:uuid:"+UUID.randomUUID().toString();
-            //uuidurn = "urn:uuid:"+uuid;
             principal = new HalcyonPrincipal(userURI, true);
         }
         UserSessionDataStorage.getInstance().put(userURI, new Block());
@@ -88,6 +84,7 @@ public final class HalcyonSession extends WebSession {
             ResteasyClient client = builder.build();
             String cmd = s.getProxyHostName()+"/auth/admin/realms/"+HalcyonSettings.realm+"/users";
             ResteasyWebTarget target = client.target(cmd);
+            System.out.println("SERVER CLIENT ===> "+cmd);
             Invocation.Builder zam = target.request();
             zam.header("Authorization", "Bearer "+jwt);
             Response r = zam.get();
@@ -100,6 +97,7 @@ public final class HalcyonSession extends WebSession {
             }            
             cmd = s.getAuthServer()+"/auth/admin/realms/"+HalcyonSettings.realm+"/groups";
             target = client.target(cmd);
+            System.out.println("SERVER CLIENT ===> "+cmd);
             zam = target.request();
             zam.header("Authorization", "Bearer "+jwt);
             r = zam.get();           
@@ -112,11 +110,11 @@ public final class HalcyonSession extends WebSession {
                 ResultSet rs = QueryExecutionFactory.create(pss.toString(),da).execSelect();
                 rs.forEachRemaining(qs ->{
                     Resource gg = qs.getResource("s");                    
-                    //String cmdx = s.getAuthServer()+"/auth/admin/realms/"+HalcyonSettings.realm+"/groups"+gg.getURI().substring(9)+"/members";
                     System.out.println(gg.getURI());
                     map.forEach((k,v)->{ System.out.println(k+"  "+v);});
                     String cmdx = s.getAuthServer()+"/auth/admin/realms/"+HalcyonSettings.realm+"/groups/"+map.get(gg.getURI())+"/members";
                     ResteasyWebTarget targetx = client.target(cmdx);
+                    System.out.println("SERVER CLIENT ===> "+cmdx);
                     Invocation.Builder zamx = targetx.request();
                     zamx.header("Authorization", "Bearer "+jwt);
                     Response rr = zamx.get();
@@ -149,6 +147,7 @@ public final class HalcyonSession extends WebSession {
                 System.out.println("not able to update/Parse groups...");
             }
         }
+        System.out.println("Creating Session...Done.");
     }
     
     public Block getBlock() {
@@ -164,9 +163,7 @@ public final class HalcyonSession extends WebSession {
     
     public Model ParseLab(JsonObject jo, HashMap<String,String> map) {
         Model m = ModelFactory.createDefaultModel();
-        //String uuidx = jo.getString("id");
         String groupid = HalcyonSettings.getSettings().getHostName()+"/groups"+jo.getString("path").replace(" ", "%20");
-        //Resource s = m.createResource("urn:uuid:"+uuidx);
         Resource s = m.createResource(groupid);
         m.add(m.createLiteralStatement(s, SchemaDO.name, jo.getString("name")));
         m.add(m.createLiteralStatement(s, SchemaDO.url, jo.getString("path")));
@@ -186,8 +183,6 @@ public final class HalcyonSession extends WebSession {
 
     public Model ParseUser(JsonObject jo) {
         Model m = ModelFactory.createDefaultModel();
-        //String uuidx = jo.getString("id");
-        //Resource s = m.createResource("urn:uuid:"+uuidx);
         String userid = HalcyonSettings.getSettings().getHostName()+"/users/"+jo.getString("username").replace(" ", "%20");
         Resource s = m.createResource(userid);
         if (jo.containsKey("lastName")) {

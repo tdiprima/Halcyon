@@ -12,6 +12,7 @@ import static com.ebremer.halcyon.imagebox.IIIFUtils.IIIFAdjust;
 import com.ebremer.halcyon.lib.ImageMeta;
 import com.ebremer.halcyon.lib.ImageMeta.ImageScale;
 import com.ebremer.halcyon.filereaders.ImageReader;
+import com.ebremer.halcyon.wicket.ListImages;
 import com.ebremer.ns.EXIF;
 import com.ebremer.ns.GEO;
 import com.ebremer.ns.IIIF;
@@ -40,6 +41,7 @@ import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.SchemaDO;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -47,7 +49,10 @@ import org.apache.jena.vocabulary.SchemaDO;
  */
 public class IIIFMETA {
     
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(IIIFMETA.class);
+    
     public static String GetImageInfo(URI uri, ImageMeta meta) {
+        logger.debug(uri+"  "+meta);
         Model m = ModelFactory.createDefaultModel();
         m.setNsPrefix("so", SchemaDO.NS);
         Resource s = m.createResource(uri.toString());

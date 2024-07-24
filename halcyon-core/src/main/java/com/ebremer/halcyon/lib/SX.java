@@ -35,7 +35,7 @@ public class SX {
         try {
             final TileRequestEngine tre = new TileRequestEngine(uri);
             Tile tile = tre.getTile(new ImageRegion(0,0,meta.getWidth(),meta.getHeight()), new Rectangle(meta.getWidth()>>6,0), false, aspectratio);
-            boolean[][] background = BackgroundDetector.getBackgroundMask(tile.getBufferedImage(),numTilesX, numTilesY);
+            boolean[][] background = BackgroundDetector.getBackgroundMask(tile.getBufferedImage(),numTilesX, numTilesY, 20);
             for (int i = 0; i < numTilesX; i++) {
                 for (int j = 0; j < numTilesY; j++) {
                     if (!background[i][j]) {

@@ -1,9 +1,8 @@
 package com.ebremer.halcyon.server;
 
-import com.ebremer.halcyon.filesystem.HURI;
 import com.ebremer.halcyon.lib.OperatingSystemInfo;
-import com.ebremer.halcyon.lib.URITools;
 import com.ebremer.halcyon.server.utils.HalcyonSettings;
+import com.ebremer.halcyon.utils.HURI;
 import com.ebremer.ns.HAL;
 import com.ebremer.ns.LDP;
 import java.io.File;
@@ -31,14 +30,12 @@ import org.springframework.core.io.ClassPathResource;
  * @author erich
  */
 public class INIT {
-    public static String KEYCLOAKJSONPATH = "keycloak.json";
-    public static String KEYCLOAKREALMCONFIGJSONPATH = "keycloak-realm-config.json";
         
-    public void dump(String src) {
-        if (!(new File(src)).exists()) {
+    public void dump(String src, String dest) {
+        if (!(new File(dest)).exists()) {
             try {
                 ClassPathResource cpr = new ClassPathResource(src); 
-                Files.copy(cpr.getInputStream(), Paths.get(src), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(cpr.getInputStream(), Paths.get(dest), StandardCopyOption.REPLACE_EXISTING);
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(INIT.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
@@ -79,17 +76,25 @@ public class INIT {
     
     public Model getDefaultLinuxSettings() {
         Resource r = getDefaultSettings();
-        r.getModel().createResource(URITools.fix(Paths.get("Storage").toUri()))
-                .addProperty(RDF.type, HAL.StorageLocation)
-                .addProperty(HAL.urlpathprefix, "/Storage");
+        r
+            .addProperty(HAL.hasResourceHandler,
+                r.getModel().createResource()
+                    .addProperty(RDF.type, LDP.Container)
+                    .addProperty(HAL.resourceBase, r.getModel().createResource(HURI.of(Path.of("Storage")).toString()))
+                    .addProperty(HAL.urlPath, "/ldp")
+            );        
         return r.getModel();
     }
     
     public Model getDefaultMacOSXSettings() {
         Resource r = getDefaultSettings();
-        r.getModel().createResource(URITools.fix(Paths.get("Storage").toUri()))
-                .addProperty(RDF.type, HAL.StorageLocation)
-                .addProperty(HAL.urlpathprefix, "/Storage");
+        r
+            .addProperty(HAL.hasResourceHandler,
+                r.getModel().createResource()
+                    .addProperty(RDF.type, LDP.Container)
+                    .addProperty(HAL.resourceBase, r.getModel().createResource(HURI.of(Path.of("Storage")).toString()))
+                    .addProperty(HAL.urlPath, "/ldp")
+            );        
         return r.getModel();
     }
     
@@ -109,11 +114,13 @@ public class INIT {
     
     public void init() {
         JenaSystem.init();
-        // Setup Keycloak initialization files
         
+        dump("defaultapplication.yml","application.yml");
+        
+        // Setup Keycloak initialization files        
         if (!(new File("data").exists())) {
             if (!(new File("keycloak-realm-config.json").exists())) {
-                dump("keycloak-realm-config.json");
+                dump("defaultkeycloak-realm-config.json","keycloak-realm-config.json");
             }
         } else {
             File spent = new File("keycloak-realm-config.json");
@@ -121,7 +128,8 @@ public class INIT {
                 spent.delete();
             }
         }
-        dump("keycloak.json");        
+        dump("defaultkeycloak.json","keycloak.json");
+        
         // OS Specific Settings        
         File settings = new File("settings.ttl");
         switch (OperatingSystemInfo.getName()) {

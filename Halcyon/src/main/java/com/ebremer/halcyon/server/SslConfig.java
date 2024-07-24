@@ -42,11 +42,7 @@ public class SslConfig {
         };
     }
     
-    //@Bean
-    //public SSLContext sslContext() throws Exception {
-      //  return getSslContext();
-    //}
-    
+    @Bean
     public static SSLContext getSslContext() {
         if (HalcyonSettings.getSettings().isHTTPS2enabled()) {
             String keyStorePassword = "password";
@@ -58,7 +54,7 @@ public class SslConfig {
                 Logger.getLogger(SslConfig.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
             }
-            try (FileInputStream keyStoreInput = new FileInputStream("halcyonkeystore.jks")) {
+            try (FileInputStream keyStoreInput = new FileInputStream("./halcyonkeystore.jks")) {
                 keyStore.load(keyStoreInput, keyStorePassword.toCharArray());
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(SslConfig.class.getName()).log(Level.SEVERE, null, ex);
@@ -80,7 +76,7 @@ public class SslConfig {
                 Logger.getLogger(SslConfig.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
             }
-            try (FileInputStream trustStoreInput = new FileInputStream("halcyontruststore.jks")) {
+            try (FileInputStream trustStoreInput = new FileInputStream("./halcyontruststore.jks")) {
                 trustStore.load(trustStoreInput, trustStorePassword.toCharArray());
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(SslConfig.class.getName()).log(Level.SEVERE, null, ex);

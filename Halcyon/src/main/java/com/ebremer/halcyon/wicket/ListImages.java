@@ -89,7 +89,7 @@ public class ListImages extends BasePage implements IPanelChangeListener {
                             exif:width ?width;
                             exif:height ?height
                 }
-            }
+            } order by ?s
             """
         );
         selected = "urn:halcyon:nocollections";

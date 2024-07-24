@@ -1,5 +1,6 @@
 package com.ebremer.halcyon.imagebox;
 
+import com.ebremer.halcyon.filereaders.ImageReader;
 import static com.ebremer.halcyon.imagebox.Enums.ImageFormat.TTL;
 import com.ebremer.halcyon.server.utils.HalcyonSettings;
 import com.ebremer.halcyon.lib.ImageMeta;
@@ -33,12 +34,12 @@ public class ImageServer extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(ListImages.class);
     
     public ImageServer() {
-        System.out.println("Starting ImageServer...");
+        logger.info("Starting ImageServer...");
     }
            
     @Override
     protected void doGet( HttpServletRequest request, HttpServletResponse response ) {
-        System.out.println(request.getRequestURI()+"?"+request.getQueryString());
+        logger.info(request.getRequestURI()+"?"+request.getQueryString());
         String iiif = request.getParameter("iiif");
         if (iiif!=null) {
             IIIFProcessor i;
@@ -49,7 +50,7 @@ public class ImageServer extends HttpServlet {
                 return;
             }
             if (i.tilerequest) {
-                com.ebremer.halcyon.filereaders.ImageReader ir;
+                ImageReader ir;
                 ImageMeta meta = null;
                 try {
                     ir = ImageReaderPool.getPool().borrowObject(i.uri);
@@ -138,7 +139,7 @@ public class ImageServer extends HttpServlet {
                         break;
                 }
             } else if (i.inforequest) {                
-                com.ebremer.halcyon.filereaders.ImageReader ir;
+                ImageReader ir;
                 ImageMeta meta = null;
                 try {
                     ir = ImageReaderPool.getPool().borrowObject(i.uri);

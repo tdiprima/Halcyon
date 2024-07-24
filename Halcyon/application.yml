@@ -1,0 +1,76 @@
+keycloak:
+  server:
+    contextPath: /auth
+    username: admin
+    password: admin
+
+server:
+  port: 8888
+  http2:
+    enabled: true
+  ssl:
+    bundle: server
+    enabled-protocols: TLSv1.3
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 200MB
+      max-request-size: 200MB
+      file-size-threshold: 2MB
+    session:
+      timeout: 900
+  jetty:
+    connection-idle-timeout: 900000    
+
+spring:
+  main:
+    lazy-initialization: false
+    allow-circular-references: true
+  h2:
+    console:
+      enabled: false
+      path: /h2
+  datasource:
+    username: sa
+    password: 
+    url: jdbc:h2:file:./data/keycloak;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+  jpa:
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        transaction:
+          jta:
+            platform: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform
+  ssl:
+    bundle:
+      jks:
+        server:
+          key:
+            alias: "halcyon"
+          keystore:
+            location: "./halcyonkeystore.jks"
+            password: "password"
+            type: "JKS"
+          truststore:
+            location: "./halcyontruststore.jks"
+            password: "password"
+            type: "JKS"
+
+logging:
+  file:
+    name: logs/halcyon.log
+    max-size: 100MB
+    max-history: 10
+  level:
+    root: ERROR
+    com.ebremer.halcyon.filesystem.DirectoryProcessor: INFO
+    #com.ebremer.halcyon.server.ldp: DEBUG
+    #org.pac4j: DEBUG
+    #com.nimbusds: DEBUG
+    #com.ebremer.halcyon.fuseki.shiro: DEBUG
+    #org.springframework.boot.context.logging.ClassLoader: DEBUG
+    #org.springframework.boot.context.logging.loader: DEBUG
+    #org.jboss: OFF
+    #com.ebremer.halcyon: ERROR
+    #com.ebremer.beakgraph: ERROR

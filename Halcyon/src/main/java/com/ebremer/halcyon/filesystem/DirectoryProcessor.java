@@ -8,6 +8,7 @@ import com.ebremer.halcyon.filereaders.ImageReader;
 import com.ebremer.halcyon.lib.FileUtils;
 import com.ebremer.halcyon.server.utils.HalcyonSettings;
 import com.ebremer.halcyon.server.utils.PathMapper;
+import com.ebremer.halcyon.utils.HURI;
 import com.ebremer.halcyon.utils.HashTools;
 import com.ebremer.halcyon.utils.HashTools.Hashes;
 import com.ebremer.ns.HAL;
@@ -28,8 +29,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import static java.util.stream.Collectors.toList;
 import java.util.stream.Stream;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -45,8 +44,6 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
@@ -58,18 +55,18 @@ import org.slf4j.LoggerFactory;
  * @author erich
  */
 public class DirectoryProcessor {
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(DirectoryProcessor.class);
     public final int cores;
     private final Dataset buffer;
     private record FileMeta(long fileLastModified) {};
     private final ConcurrentHashMap<Resource, FileMeta> list;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(DirectoryProcessor.class);
     private static final Integer filemetaversion = 0;
     
-    public DirectoryProcessor(Dataset buffer) {
+    public DirectoryProcessor(Dataset buffer, int cores) {
         this.buffer = buffer;
-        list = GetExisting();
-        cores = 4;
+        this.list = GetExisting();
+        this.cores = cores;
     }
     
     public Model PathInfo(URI childuri) {
@@ -99,7 +96,8 @@ public class DirectoryProcessor {
                     .filter(Objects::nonNull)
                     .filter(fff -> fff.toFile().isFile())                     
                     .filter(fx->{
-                        Optional<URI> rrz = PathMapper.getPathMapper().file2http(fx.toUri());
+                        logger.trace("Processing {}", fx);
+                        Optional<URI> rrz = PathMapper.getPathMapper().file2http(fx.toUri());                        
                         if (rrz.isPresent()) {
                             Resource target = ResourceFactory.createResource(rrz.get().toString());
                             if (list.containsKey(target)) {
@@ -108,11 +106,11 @@ public class DirectoryProcessor {
                                 return true;
                             } 
                         }
-                        System.out.println("Problem with : "+fx.toString());
+                        logger.error("Mapping not found for {}",fx.toString());
                         return false;
                     })
                     .filter(fff->FileReaderFactoryProvider.hasReaderFor(fff))
-                    .forEach(fx -> {
+                    .forEach(fx -> {                        
                         Optional<URI> rrz = PathMapper.getPathMapper().file2http(fx.toUri());
                         URI httpuri;                       
                         if (rrz.isPresent()) {
@@ -120,7 +118,7 @@ public class DirectoryProcessor {
                         } else {
                             throw new Error("ACK!!!!");
                         }                        
-                        System.out.println("Processing ---> "+fx+"  "+httpuri.toString());
+                        logger.info("Processing ---> "+fx+"  "+httpuri.toString());
                         Model m = ModelFactory.createDefaultModel();
                         Resource r = m.createResource(httpuri.toString());
                         r
@@ -129,6 +127,7 @@ public class DirectoryProcessor {
                             .addProperty(OWL.sameAs, m.createResource(HURI.of(fx).toString()));
                         File file = fx.toFile();
                         FileReaderFactory frf = FileReaderFactoryProvider.getReaderForFormat(r);
+                        logger.trace("Reader {}", frf);
                         try (FileReader fr = frf.create(fx.toUri(), httpuri)){
                             Model xxx = fr.getMeta(httpuri);
                             m.add(xxx);
@@ -137,6 +136,7 @@ public class DirectoryProcessor {
                             }
                             m.addLiteral(r, HAL.validFile, true);
                         } catch (Exception ex) {
+                            logger.trace("WHAT?!?! {} {}", fx, ex.getMessage());
                             m.addLiteral(r, HAL.validFile, false);
                             m.addLiteral(r, HAL.filemetaversion, filemetaversion);
                         }
@@ -161,20 +161,17 @@ public class DirectoryProcessor {
                                 m.add(r, LOC.sha256, hashes.SHA256());
                                 m.add(r, OWL.sameAs, m.createResource("urn:sha256:"+hashes.SHA256()));
                             } catch (NoSuchAlgorithmException ex) {
-                                Logger.getLogger(DirectoryProcessor.class.getName()).log(Level.SEVERE, null, ex);
+                                logger.error(ex.toString());
                             } catch (FileNotFoundException ex) {
-                                Logger.getLogger(DirectoryProcessor.class.getName()).log(Level.SEVERE, null, ex);
+                                logger.error(ex.toString());
                             } catch (IOException ex) {
-                                Logger.getLogger(DirectoryProcessor.class.getName()).log(Level.SEVERE, null, ex);
+                                logger.error(ex.toString());
                             }
                             System.out.println("Time = "+((System.nanoTime()-now)/1000000000d));
                             pathinfo = PathInfo(httpuri);
                             buffer.begin(ReadWrite.WRITE);
                             buffer.addNamedModel(HAL.CollectionsAndResources, pathinfo);
                             buffer.removeNamedModel(r);
-                            System.out.println("VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
-                            RDFDataMgr.write(System.out, m, Lang.TURTLE);
-                            System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
                             buffer.addNamedModel(r, m);
                             buffer.commit();
                             buffer.end();
