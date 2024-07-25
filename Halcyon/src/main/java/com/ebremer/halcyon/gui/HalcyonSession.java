@@ -68,6 +68,7 @@ public final class HalcyonSession extends WebSession {
             OidcProfile oidcProfile = (OidcProfile) profile.get();
             String jwt = oidcProfile.getAccessToken().getValue();
             JwtToken haha = new JwtToken(jwt);
+            user = haha.getPrincipal().getPreferredUserName();
             userURI = haha.getPrincipal().getUserURI();
             principal = new HalcyonPrincipal(haha,false);
         } else {
@@ -126,7 +127,7 @@ public final class HalcyonSession extends WebSession {
                         JsonArray ja = jr.readArray();
                         ja.forEach(p->{
                             //Resource pp = da.createResource("urn:uuid:"+p.asJsonObject().getString("id"));
-                            Resource pp = da.createResource(HalcyonSettings.getSettings().getHostName()+"/users/"+p.asJsonObject().getString("username").replace(" ", "%20"));
+                            Resource pp = da.createResource(HalcyonSettings.getSettings().getHostName()+"/user/"+p.asJsonObject().getString("username").replace(" ", "%20"));
                             da.add(gg,SchemaDO.member,pp);
                             da.add(pp,SchemaDO.memberOf,gg);
                         });
@@ -183,7 +184,7 @@ public final class HalcyonSession extends WebSession {
 
     public Model ParseUser(JsonObject jo) {
         Model m = ModelFactory.createDefaultModel();
-        String userid = HalcyonSettings.getSettings().getHostName()+"/users/"+jo.getString("username").replace(" ", "%20");
+        String userid = HalcyonSettings.getSettings().getHostName()+"/user/"+jo.getString("username").replace(" ", "%20");
         Resource s = m.createResource(userid);
         if (jo.containsKey("lastName")) {
             m.add(m.createLiteralStatement(s, SchemaDO.familyName, jo.getString("lastName")));

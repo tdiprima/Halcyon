@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import com.ebremer.halcyon.fuseki.HalcyonProxyServlet;
 import com.ebremer.halcyon.fuseki.SPARQLEndPoint;
+import com.ebremer.halcyon.lib.OperatingSystemInfo;
 import com.ebremer.halcyon.lib.spatial.Spatial;
 import com.ebremer.halcyon.server.ldp.LDPServer;
 import jakarta.annotation.PostConstruct;
@@ -174,7 +175,7 @@ public class Main {
     public FilterRegistrationBean<CustomFilter> KeycloakOIDCFilterFilterRegistration(){
         FilterRegistrationBean<CustomFilter> registration = new FilterRegistrationBean<>();
 	registration.setFilter(new CustomFilter());
-        registration.addUrlPatterns("/ldp/*");
+        registration.addUrlPatterns("/*");
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 2);
         return registration;
     }
@@ -213,13 +214,28 @@ public class Main {
                 String name = "LDP "+UUID.randomUUID().toString();
                 srb.setBeanName(name);
                 srb.setOrder(Ordered.HIGHEST_PRECEDENCE + 4);
-                srb.addInitParameter("resourceBase", rh.resourceBase().getPath().substring(1));
+                if (OperatingSystemInfo.ifWindows()) {
+                    srb.addInitParameter("resourceBase", rh.resourceBase().getPath().substring(1));
+                    System.out.println("Add Path --> "+rh.urlPath()+"  "+rh.resourceBase().getPath().substring(1));
+                } else {
+                    srb.addInitParameter("resourceBase", rh.resourceBase().getPath());
+                    System.out.println("Add Path --> "+rh.urlPath()+"  "+rh.resourceBase().getPath());
+                }
                 srb.addInitParameter("dirAllowed", "true");
-                System.out.println("Add Path --> "+rh.urlPath()+"  "+rh.resourceBase().getPath().substring(1));
                 srb.setServlet(new LDPServer());
                 srb.setUrlMappings(Arrays.asList(rh.urlPath()+"*"));
                 applicationContext.getBeanFactory().registerSingleton(name, srb);
             });
+            ServletRegistrationBean<Servlet> srb = new ServletRegistrationBean();
+                srb.setLoadOnStartup(3);
+                String name = "LDP "+UUID.randomUUID().toString();
+                srb.setBeanName(name);
+                srb.setOrder(Ordered.HIGHEST_PRECEDENCE + 4);
+                srb.addInitParameter("resourceBase", "D:/HalcyonStorage/users/");
+                srb.addInitParameter("dirAllowed", "true");
+                srb.setServlet(new LDPServer());
+                srb.setUrlMappings(Arrays.asList("/users/*"));
+                applicationContext.getBeanFactory().registerSingleton(name, srb);
         }
     }    
 }

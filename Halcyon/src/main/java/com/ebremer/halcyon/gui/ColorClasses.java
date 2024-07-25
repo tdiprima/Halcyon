@@ -3,6 +3,7 @@ package com.ebremer.halcyon.gui;
 import com.ebremer.halcyon.data.DataCore;
 import com.ebremer.halcyon.puffin.CommandNode;
 import com.ebremer.halcyon.puffin.SHACLForm;
+import com.ebremer.halcyon.server.utils.HalcyonSettings;
 import com.ebremer.halcyon.wicket.BasePage;
 import com.ebremer.ns.HAL;
 import org.apache.jena.query.Dataset;
@@ -18,14 +19,15 @@ import org.apache.jena.vocabulary.RDF;
  */
 public class ColorClasses extends BasePage {
     private static final long serialVersionUID = 1L;
-    
+        
     public ColorClasses() {
         Model m = ModelFactory.createDefaultModel();
-        Resource r = m.createProperty(HAL.NS+HalcyonSession.get().getUserURI()+"/colorclasses");
+        Resource r = m.createProperty(HalcyonSettings.getSettings().getHostName()+"/users/"+HalcyonSession.get().getUser()+"/colorclasses");
+        Resource ng = m.createProperty(HalcyonSettings.getSettings().getHostName()+"/users/"+HalcyonSession.get().getUser()+"/");
         Dataset ds = DataCore.getInstance().getDataset();
         ds.begin(ReadWrite.READ);
-        if (ds.containsNamedModel(r)) {
-            m.add(ds.getNamedModel(r));
+        if (ds.containsNamedModel(ng)) {
+            m.add(ds.getNamedModel(ng));
         }
         ds.end();
         Resource key;
@@ -35,7 +37,7 @@ public class ColorClasses extends BasePage {
             m.add(r, RDF.type, HAL.AnnotationClassList);
             key = r;
         }
-        CommandNode cn = new CommandNode(r,m);
+        CommandNode cn = new CommandNode(ng,m);
         SHACLForm sf = new SHACLForm("sform", key, HAL.AnnotationClassListShape.asNode(), cn);
         add(sf);
     }

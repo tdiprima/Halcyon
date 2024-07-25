@@ -16,7 +16,9 @@ import java.security.cert.X509Certificate;
 public class LDPClient2 {
 
     public static void main(String[] args) throws Exception {
-        String url = "https://localhost:8888/ldp/annotations/wow.json";
+        String url = "https://localhost:8888/ldp/annotations/wow2.json";
+       // String url = "https://beak.bmi.stonybrook.edu:8889/ldp/erich/wow5.json";
+        //String url = "https://beak.bmi.stonybrook.edu:8889/ldp/Storage/images/tcga_data/brca/testing2.json";
 
         String filePath = "D:\\dicom\\0002.json";
         String body = new String(Files.readAllBytes(Paths.get(filePath)));

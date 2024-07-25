@@ -105,9 +105,9 @@ public class IIIFMETA {
                 new ByteArrayInputStream((
                     """
                     {
-                    "@context": "http://iiif.io/api/image/2/context.json",
+                    "@context": "https://iiif.io/api/image/2/context.json",
                     "@embed": "@always",
-                    "protocol": "http://iiif.io/api/image",
+                    "protocol": "https://iiif.io/api/image",
                     "profile": {}
                     }
                     """).getBytes())))              
