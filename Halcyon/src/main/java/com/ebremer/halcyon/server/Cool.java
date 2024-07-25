@@ -88,18 +88,7 @@ public class Cool {
         FilterRegistrationBean<HalcyonSecurityFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(securityFilter);
         registration.setName("KeycloakOidcClient");
-        registration.addUrlPatterns(
-                "/ldp*",
-                "/blank",
-                "/skunkworks/yay",
-                "/f*",
-                "/callback",
-                "/about",
-                "/iiif*/",
-                "/sparql",
-                "/revisionhistory",
-                "/collections"
-        );
+        registration.addUrlPatterns(URLControl.getSecuredURLs());
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 1); // Order just after CallbackFilter
         return registration;
     }
