@@ -50,9 +50,42 @@ export function save(scene) {
       }
     });
 
-    // TODO: save serializedObjects to database
-    serializedObjects.image = getUrl(scene);
-    serializedObjects.type = "hal:Annotation";
+    // Add object with properties
+    const url = getUrl(scene);
+    const parts = url.split("?iiif=");
+    let myObject = {
+      image: parts[1],
+      type: "hal:Annotation"
+    }
+    serializedObjects.push(myObject);
+
+    // Save serializedObjects to database
+    let sections = parts[1].split("/");
+    sections.pop();
+    let postUrl = `${sections.join("/")}/${crypto.randomUUID()}.json`;
+
+    const postJSONData = async () => {
+      try {
+        const response = await fetch(postUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(serializedObjects)
+        });
+
+        if (response.ok) {
+          console.log('File created successfully.', response);
+        } else {
+          console.error('Error creating file:', response.status, response.statusText);
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+      }
+    };
+
+    postJSONData();
+
     console.log(serializedObjects);
     // console.log(JSON.stringify(serializedObjects));
     alert('Scene serialized successfully.');
@@ -112,18 +145,29 @@ export function save(scene) {
 
 export function deserializeScene(scene, serializedObjects) {
   const loader = new THREE.ObjectLoader();
+  const objects = [];
 
   serializedObjects.forEach(serializedData => {
     if (typeof serializedData === 'string') {
-      // If serializedData is a string, parse it first
       serializedData = JSON.parse(serializedData);
+    }
+
+    // Check if the object should be deserialized
+    if (Object.keys(serializedData).length === 2 &&
+      serializedData.hasOwnProperty('image') &&
+      serializedData.hasOwnProperty('type')) {
+      // Skip this object as it only contains "image" and "type"
+      // console.log('Skipping object with only image and type fields:', serializedData);
+      return;
     }
 
     // Deserialize the object
     const object = loader.parse(serializedData);
 
-    // Add the deserialized object to the scene
+    // Add the deserialized object to the scene and objects array
     scene.add(object);
+    objects.push(object);
   });
 
+  return objects;
 }

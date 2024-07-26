@@ -81,7 +81,14 @@ export function edit(scene, camera, renderer, controls, originalZ) {
 
     // Create and position the button
     const button = document.createElement('div');
-    button.innerHTML = '<i class="fa fa-trash" style="color: #0000ff;"></i>';
+    let hexColor;
+    if (mesh.material && mesh.material.color) {
+      const color = mesh.material.color;
+      hexColor = `#${color.getHexString()}`;
+    } else {
+      hexColor = "#0000ff";
+    }
+    button.innerHTML = `<i class="fa fa-trash" style="color: ${hexColor};"></i>`;
     document.body.appendChild(button);
     button.style.position = 'absolute';
     button.style.left = `${x}px`;
@@ -101,9 +108,9 @@ export function edit(scene, camera, renderer, controls, originalZ) {
     });
   }
 
+  // Helper function to calculate the threshold based on the distance
   const minDistance = 322;
   const maxDistance = originalZ;
-
   function calculateThreshold(currentDistance, minThreshold, maxThreshold) {
     // Clamp currentDistance within the range
     currentDistance = Math.max(minDistance, Math.min(maxDistance, currentDistance));
@@ -118,12 +125,7 @@ export function edit(scene, camera, renderer, controls, originalZ) {
 
     // Calculate the distance from the camera to a target point (e.g., the center of the scene)
     const distance = camera.position.distanceTo(scene.position);
-
-    // Adjust the threshold based on the distance
-    raycaster.params.Line.threshold = calculateThreshold(distance, 100, 1000); // 250/8000
-    // raycaster.params.Line.threshold = 5000;
-
-    let size = calculateThreshold(distance, 3, 100);
+    let size = calculateThreshold(distance, 3, 100); // Set size of edit handles based on zoom
 
     // Get the canvas element and its bounding rectangle
     const rect = renderer.domElement.getBoundingClientRect();
@@ -170,7 +172,7 @@ export function edit(scene, camera, renderer, controls, originalZ) {
     let color;
 
     if (mesh.material && mesh.material.color) {
-      color = mesh.material.color; // This will be a THREE.Color object
+      color = mesh.material.color;
     } else {
       color = 0x0000ff;
     }
@@ -199,7 +201,7 @@ export function edit(scene, camera, renderer, controls, originalZ) {
 
   function turnOffEdit() {
     // Remove delete buttons
-    const divs = Array.from(document.querySelectorAll('div')).filter(div => div.innerHTML.trim() === '<i class="fa fa-trash" style="color: #0000ff;"></i>');
+    const divs = Array.from(document.querySelectorAll('div')).filter(div => div.querySelector('i.fa.fa-trash'));
     divs.forEach(div => {
       document.body.removeChild(div);
     });

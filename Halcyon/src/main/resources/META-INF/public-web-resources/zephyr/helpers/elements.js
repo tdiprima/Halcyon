@@ -153,40 +153,6 @@ export function screenCapture(renderer) {
   });
 }
 
-export function deleteIcon(event, mesh, scene) {
-  // Calculate the position to place the div icon near the cursor
-  const divPosX = event.clientX;
-  const divPosY = event.clientY;
-
-  // Create the div and set its position
-  const iconDiv = document.createElement('div');
-  iconDiv.innerHTML = '<i class="fa fa-trash" style="color: #0000ff;"></i>';
-  iconDiv.style.position = 'absolute';
-  iconDiv.style.left = `${divPosX}px`;
-  iconDiv.style.top = `${divPosY}px`;
-  document.body.appendChild(iconDiv);
-
-  // Add click event listener to the icon for deletion
-  iconDiv.addEventListener('click', function() {
-    // Dispose of the rectangle's geometry and material before removing it
-    if (mesh.geometry) mesh.geometry.dispose();
-    if (mesh.material) {
-      // If the material is an array (multi-materials), dispose each one
-      if (Array.isArray(mesh.material)) {
-        mesh.material.forEach(material => material.dispose());
-      } else {
-        mesh.material.dispose();
-      }
-    }
-
-    // Remove the mesh from the Three.js scene
-    scene.remove(mesh);
-
-    // Remove the div from the DOM
-    document.body.removeChild(iconDiv);
-  });
-}
-
 export function removeObject(obj) {
   if (obj.parent) {
     obj.parent.remove(obj); // Ensure the object is removed from its parent
@@ -218,8 +184,8 @@ export function turnOtherButtonsOff(activeButton) {
 
 export function displayAreaAndPerimeter(area, perimeter) {
   // Convert area and perimeter to microns
-  let areaInMicrons = area / 16; // 1 micron² = 16 pixels²
-  let perimeterInMicrons = perimeter / 4; // 1 micron = 4 pixels
+  // let areaInMicrons = area / 16; // 1 micron² = 16 pixels²
+  // let perimeterInMicrons = perimeter / 4; // 1 micron = 4 pixels
 
   let div = document.createElement("div");
   div.style.position = "absolute";
@@ -243,7 +209,9 @@ export function displayAreaAndPerimeter(area, perimeter) {
     div.style.display = 'none';
   }, 5000);
 
-  div.innerHTML = `Area: ${areaInMicrons.toFixed(2)} microns²<br>Perimeter: ${perimeterInMicrons.toFixed(2)} microns`;
+  // div.innerHTML = `Area: ${areaInMicrons.toFixed(2)} microns²<br>Perimeter: ${perimeterInMicrons.toFixed(2)} microns`;
+  div.innerHTML = `Area: ${area.toFixed(2)} pixels²<br>Perimeter: ${perimeter.toFixed(2)} pixels`;
   div.appendChild(closeButton);
   document.body.appendChild(div);
+  // console.log(area.toFixed(2), perimeter.toFixed(2));
 }

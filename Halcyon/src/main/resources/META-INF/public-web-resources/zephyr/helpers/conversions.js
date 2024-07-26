@@ -1,3 +1,4 @@
+// Conversions and calculations
 import * as THREE from 'three';
 
 /**
@@ -33,6 +34,9 @@ export function worldToImageCoordinates(positionArray, scene) {
   return imageCoordinates;
 }
 
+/**
+ * Get dimensions of image
+ */
 function getDims(scene) {
   let imageWidth, imageHeight;
   let children = scene.children;
@@ -47,6 +51,9 @@ function getDims(scene) {
   return { imageWidth, imageHeight }
 }
 
+/**
+ * Get image URL
+ */
 export function getUrl(scene) {
   let url;
   let children = scene.children;
@@ -108,19 +115,28 @@ export function pixelsToMicrometers(pixels, micronsPerPixel) {
   return pixels * micronsPerPixel;
 }
 
+/**
+ * Convert a 3D point in the scene to a 2D screen position
+ */
 function toScreenPosition(point, camera, renderer) {
   const canvas = renderer.domElement;
+  // Needed to center the projected 2D coordinates
   const widthHalf = 0.5 * canvas.width;
   const heightHalf = 0.5 * canvas.height;
 
+  // Map the 3D point to a range of -1 to 1 on the X and Y axes
   const vector = point.clone().project(camera);
 
+  // Scale and shift the coordinates to fit within the canvas width/height
   vector.x = (vector.x * widthHalf) + widthHalf;
   vector.y = -(vector.y * heightHalf) + heightHalf;
 
-  return vector;
+  return new THREE.Vector2(vector.x, vector.y);
 }
 
+/**
+ * Calculate the area of a polygon in square pixels
+ */
 export function calculatePolygonArea(positions, camera, renderer) {
   // The Shoelace formula (or Gauss's area formula)
   let area = 0;
@@ -140,9 +156,12 @@ export function calculatePolygonArea(positions, camera, renderer) {
     area += (x1 * y2 - x2 * y1);
   }
   area = Math.abs(area) / 2;
-  return area;
+  return area / 4;
 }
 
+/**
+ * Calculate the perimeter of a polygon in pixels
+ */
 export function calculatePolygonPerimeter(positions, camera, renderer) {
   // The sum of the distances between each pair of consecutive vertices
   let perimeter = 0;
@@ -169,11 +188,11 @@ export function calculatePolygonPerimeter(positions, camera, renderer) {
   const y2 = screenPositions[0].y;
   perimeter += Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
 
-  return perimeter;
+  return perimeter / 2;
 }
 
 /**
- * Improve raycasting by converting to line
+ * Improve raycasting by converting to Line
  */
 export function convertLineLoopToLine(lineLoop, name, cancerType) {
   const geometry = new THREE.BufferGeometry();
