@@ -3,7 +3,7 @@ import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { createButton } from "./elements.js";
 import { getMousePosition } from "./mouse.js";
-import { pixelsToMicrons } from "./conversions.js";
+// import { pixelsToMicrons } from "./conversions.js";
 
 export function ruler(scene, camera, renderer, controls) {
   let isDrawing = false;
@@ -154,7 +154,8 @@ export function ruler(scene, camera, renderer, controls) {
           calculateScaleFactor(camera, renderer)
         ).toFixed(2);
 
-        message = `Length ${length} \u00B5m`;
+        // message = `Length ${length} \u00B5m`;
+        message = `Length ${length} pixels`;
 
         // Calculate the distance from the camera to the text
         const distanceToCamera = camera.position.distanceTo(endVector);
@@ -204,7 +205,6 @@ export function ruler(scene, camera, renderer, controls) {
     function onMouseUp() {
       mouseIsPressed = false;
       circle.visible = false;
-      console.log(`%c${message}`, "color: #ccff00;");
     }
 
     function onTouchStart(event) {
@@ -245,7 +245,8 @@ export function ruler(scene, camera, renderer, controls) {
           calculateScaleFactor(camera, renderer)
         ).toFixed(2);
 
-        message = `Length ${length} \u00B5m`;
+        // message = `Length ${length} \u00B5m`;
+        message = `Length ${length} pixels`;
 
         // Calculate the distance from the camera to the text
         const distanceToCamera = camera.position.distanceTo(endVector);
@@ -294,18 +295,18 @@ export function ruler(scene, camera, renderer, controls) {
     function onTouchEnd() {
       mouseIsPressed = false;
       circle.visible = false;
-      console.log(`%c${message}`, "color: #ccff00;");
     }
   });
 
   /**
-   * Calculate line length, then convert to microns.
+   * Calculate line length
    */
   const Calculate = {
     lineLength(x1, y1, x2, y2, scaleFactor) {
       const threeJsUnitsLength = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
       const pixLength = threeJsUnitsLength * scaleFactor;
-      return pixelsToMicrons(pixLength); // Convert to microns
+      return pixLength;
+      // return pixelsToMicrons(pixLength); // Convert to microns
     }
   };
 

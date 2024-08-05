@@ -13,6 +13,7 @@ import { edit } from "./helpers/edit.js";
 import { label } from "./helpers/labels.js";
 import { crosshairs } from "./helpers/crosshairs.js";
 import { save } from "./helpers/save.js";
+import { fetchAnnotations } from "./helpers/fetchAnnotations.js";
 import { zoomControl, lockRotate, resetCamera } from "./helpers/zoomControl.js";
 import { screenCapture } from "./helpers/elements.js";
 // import { shading } from "./helpers/shading.js";
@@ -30,11 +31,11 @@ export function toolbar(scene, camera, renderer, controls, originalZ) {
   ellipse(scene, camera, renderer, controls);
   polygon(scene, camera, renderer, controls);
   hollowBrush(scene, camera, renderer, controls);
+  grid(scene, camera, renderer, controls);
   edit(scene, camera, renderer, controls, originalZ);
   label(scene, camera, renderer, controls, originalZ, "label");
   label(scene, camera, renderer, controls, originalZ, "area");
   // shading(scene);
-  grid(scene, camera, renderer, controls);
   ruler(scene, camera, renderer, controls);
   screenCapture(renderer);
   crosshairs(scene, camera);
@@ -44,6 +45,7 @@ export function toolbar(scene, camera, renderer, controls, originalZ) {
   //   select: true
   // });
   save(scene);
+  fetchAnnotations(scene);
   lockRotate(controls);
   resetCamera(controls);
   zoomControl(camera, controls, originalZ);
