@@ -5,6 +5,7 @@ import com.ebremer.beakgraph.ng.BeakGraph;
 import com.ebremer.halcyon.beakstuff.BeakGraphPool;
 import com.ebremer.halcyon.server.utils.HalcyonSettings;
 import com.ebremer.halcyon.utils.HURI;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;

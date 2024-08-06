@@ -34,20 +34,15 @@ public class JettyConfiguration implements WebServerFactoryCustomizer<JettyServl
                     }
                 }
             }
-
-            
-            
         };
         factory.addServerCustomizers(jettyServerCustomizer);
     }
 
     @Bean
     public MultipartConfigElement multipartConfigElement() {
-        System.out.println("BOOOOOOOOOOOOO!");
         String ha = null;
         return new MultipartConfigElement(ha);
     }
-
 }
 
 

@@ -26,7 +26,7 @@ public class Sparql extends BasePage {
         response.render(CssHeaderItem.forReference(new CssResourceReference(Sparql.class, "yasgui.min.css")));
         response.render(JavaScriptHeaderItem.forReference(new JavaScriptResourceReference(Sparql.class, "yasgui.min.js")));
         HalcyonSession hs = HalcyonSession.get();
-        HalcyonPrincipal hp = hs.getHalcyonPrincipal();
-        response.render(JavaScriptHeaderItem.forScript("var token = '"+hp.getToken()+"'", "token"));
+        HalcyonPrincipal hp = hs.getHalcyonPrincipal();        
+        response.render(JavaScriptHeaderItem.forScript("var token = '"+hp.getToken()+"'; var useriri = '"+hp.getUserURI()+"'; var userName = '"+hp.getPreferredUserName()+"';", "token"));
     }
 }
