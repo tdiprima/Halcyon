@@ -10,7 +10,8 @@ export function colorPalette() {
     fetch(window.useriri, {
       method: 'GET',
       headers: {
-        'Accept': 'application/ld+json'
+        'Accept': 'application/ld+json',
+        'Prefer': 'return=representation; shacl=https://halcyon.is/ns/AnnotationClassListShape'
       }
     })
       .then(response => {
