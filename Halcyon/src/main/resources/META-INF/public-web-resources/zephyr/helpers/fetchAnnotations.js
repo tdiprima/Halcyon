@@ -39,7 +39,7 @@ export function fetchAnnotations(scene) {
         method: 'GET',
         headers: {
           'Accept': 'application/ld+json',
-          'Prefer': 'return=representation; include="https://halcyon.is/ns/annotation"'
+          'Prefer': 'return=representation; shacl="https://halcyon.is/ns/AnnotationsShape"; include=https://halcyon.is/ns/annotation'
         }
       });
 
@@ -51,7 +51,7 @@ export function fetchAnnotations(scene) {
       }
 
       const responseText = await response.text();
-      console.log('Raw response text:', responseText);
+      // console.log('Raw response text:', responseText);
 
       // If response text is empty, alert the user and print the URL
       if (!responseText) {
@@ -71,8 +71,8 @@ export function fetchAnnotations(scene) {
       }
 
       if (!data.annotation) {
-        console.error('Invalid JSON structure:', data);
-        alert('Invalid JSON structure');
+        // console.log('No annotations:', JSON.stringify(data));
+        alert('No annotations yet. Please create, then save.');
         return [];
       }
 
