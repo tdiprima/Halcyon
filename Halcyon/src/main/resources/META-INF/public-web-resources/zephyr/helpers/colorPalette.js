@@ -3,11 +3,10 @@ export function colorPalette() {
   paletteElement.id = 'colorPalette';
   document.body.insertBefore(paletteElement, document.querySelector('canvas'));
 
-  // window.useriri = '/zephyr/colorclasses.json';
   if (!window.useriri) {
     buildColorPalette(paletteElement);
   } else {
-    fetch(window.useriri, {
+    fetch(`${window.useriri.replace("user", "users")}/colorclasses`, {
       method: 'GET',
       headers: {
         'Accept': 'application/ld+json',

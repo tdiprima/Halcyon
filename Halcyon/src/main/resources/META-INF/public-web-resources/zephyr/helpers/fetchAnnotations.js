@@ -71,8 +71,8 @@ export function fetchAnnotations(scene) {
       }
 
       if (!data.annotation) {
-        console.error('Invalid JSON structure:', data);
-        alert('Invalid JSON structure');
+        // console.log('No annotations:', JSON.stringify(data));
+        alert('No annotations yet. Please create, then save.');
         return [];
       }
 
