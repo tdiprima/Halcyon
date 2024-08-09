@@ -1,26 +1,65 @@
 export function colorPalette() {
-  let colorPalette = document.createElement('select');
-  colorPalette.id = 'colorPalette';
-  document.body.insertBefore(colorPalette, document.querySelector('canvas'));
+  let paletteElement = document.createElement('select');
+  paletteElement.id = 'colorPalette';
+  document.body.insertBefore(paletteElement, document.querySelector('canvas'));
 
-  // Create and append the options to the dropdown
-  // TODO: Create a function that makes a call to the server for this information
-  const options = [
-    { value: 'nothing', text: '-- Class --' },
-    { value: '#00ff00:Tumor', text: 'Tumor' },
-    { value: '#ffff00:Misc', text: 'Misc' },
-    { value: '#ff0000:Lymphocyte', text: 'Lymphocyte' },
-    { value: '#0000ff:Background', text: 'Background' }
-  ];
+  if (!window.useriri) {
+    buildColorPalette(paletteElement);
+  } else {
+    fetch(`${window.useriri.replace("user", "users")}/colorclasses`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/ld+json',
+        'Prefer': 'return=representation; shacl=https://halcyon.is/ns/AnnotationClassListShape'
+      }
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok. Status code:' + response.status);
+        }
+        return response.json();
+      })
+      .then(data => {
+        buildColorPalette(paletteElement, data);
+      })
+      .catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+        buildColorPalette(paletteElement);
+      });
+  }
+}
+
+function buildColorPalette(paletteElement, data) {
+  let options;
+  if (data) {
+    options = [
+      {value: 'nothing', text: '-- Class --'}
+    ];
+
+    // Create and append the options to the dropdown
+    data.hasAnnotationClass.forEach(annotationClass => {
+      const color = annotationClass.color;
+      const name = annotationClass.hasClass.name;
+      options.push({value: `${color}:${name}`, text: name});
+    });
+  } else {
+    options = [
+      {value: 'nothing', text: '-- Class --'},
+      {value: '#0f4d0f:Tumor', text: 'Tumor'},
+      {value: '#ff0000:Lymphocyte', text: 'Lymphocyte'},
+      {value: '#a700b0:Misc', text: 'Misc'},
+      {value: '#0000ff:Background', text: 'Background'}
+    ];
+  }
 
   options.forEach(opt => {
     const option = document.createElement('option');
     option.value = opt.value;
     option.textContent = opt.text;
-    colorPalette.appendChild(option);
+    paletteElement.appendChild(option);
   });
 
-  colorPalette.addEventListener('change', (event) => {
+  paletteElement.addEventListener('change', (event) => {
     if (event.target.value === 'nothing') {
       window.cancerColor = '';
       window.cancerType = '';
@@ -28,8 +67,6 @@ export function colorPalette() {
       let arr = event.target.value.split(':');
       window.cancerColor = arr[0];
       window.cancerType = arr[1];
-      // console.log(window.cancerColor);
-      // console.log(window.cancerType);
     }
   });
 }
@@ -40,7 +77,6 @@ export function getColorAndType() {
   if (window.cancerColor && window.cancerColor.length > 0) {
     color = window.cancerColor;
     type = window.cancerType;
-    // console.log(color, type);
   } else {
     color = "#0000ff";
     type = "";

@@ -25,7 +25,7 @@ export function brightContrast(scene) {
 
   let resetButton = createButton({
     id: "reset",
-    innerHtml: "Reset",
+    innerHtml: "<i class=\"fa fa-undo\"></i>",
     title: "Reset Brightness and Contrast"
   });
 
