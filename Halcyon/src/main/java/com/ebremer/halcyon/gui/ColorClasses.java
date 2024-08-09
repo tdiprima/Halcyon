@@ -37,7 +37,7 @@ public class ColorClasses extends BasePage {
             m.add(r, RDF.type, HAL.AnnotationClassList);
             key = r;
         }
-        CommandNode cn = new CommandNode(r,m);
+        CommandNode cn = new CommandNode(ng,m);
         SHACLForm sf = new SHACLForm("sform", key, HAL.AnnotationClassListShape.asNode(), cn);
         add(sf);
     }
