@@ -25,24 +25,32 @@ export function hollowBrush(scene, camera, renderer, controls) {
   slider.id = 'brushSizeSlider';
   slider.min = '10';
   slider.max = '1000';
-  slider.value = '100';
+  slider.value = '10';
   slider.title = "Brush Size";
 
-  document.body.insertBefore(slider, document.querySelector('canvas'));
+  // Create a span to display the slider value
+  const sliderValueDisplay = document.createElement('span');
+  sliderValueDisplay.id = 'sliderValueDisplay';
+  sliderValueDisplay.textContent = slider.value; // Initialize with the current slider value
 
+  // Insert the slider and the value display into the DOM
+  document.body.insertBefore(slider, document.querySelector('canvas'));
+  document.body.insertBefore(sliderValueDisplay, slider.nextSibling);
+
+  // Update the value display whenever the slider moves
   slider.addEventListener('input', onSliderInput);
   slider.addEventListener('change', onSliderChange);
 
   function onSliderInput(event) {
-    // Slider is moving
     brushSize = event.target.value;
     updateTempCircle();
+    sliderValueDisplay.textContent = brushSize;
   }
 
   function onSliderChange(event) {
-    // Slider has stopped moving (mouseup)
     brushSize = event.target.value;
     removeTempCircle();
+    sliderValueDisplay.textContent = brushSize;
   }
 
   let tempCircle = null;
