@@ -83,7 +83,6 @@ export function hollowBrush(scene, camera, renderer, controls) {
       turnOtherButtonsOff(brushButton);
       controls.enabled = false;
       this.classList.replace('annotationBtn', 'btnOn');
-      ({ color, type } = getColorAndType());
 
       canvas.addEventListener('mousedown', onMouseDown);
       canvas.addEventListener('mousemove', onMouseMove);
@@ -98,6 +97,7 @@ export function hollowBrush(scene, camera, renderer, controls) {
   // Function to start drawing
   function onMouseDown() {
     if (isDrawing) {
+      ({ color, type } = getColorAndType());
       mouseIsPressed = true;
       brushShapeGroup = new THREE.Group();
       scene.add(brushShapeGroup);
