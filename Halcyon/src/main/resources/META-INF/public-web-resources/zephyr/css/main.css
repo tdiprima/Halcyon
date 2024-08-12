@@ -9,12 +9,12 @@ body {
 }
 
 /* Dropdown Color Preview */
-.dropdown {
+.dd {
   position: relative;
   display: inline-block;
 }
 
-.dropdown-button {
+.dd-button {
   background-color: #f0f0f0;
   border: 1px solid #ccc;
   padding: 10px;
@@ -23,7 +23,7 @@ body {
   text-align: left;
 }
 
-.dropdown-content {
+.dd-content {
   display: none;
   position: absolute;
   background-color: #f9f9f9;
@@ -32,12 +32,12 @@ body {
   z-index: 1000 !important;
 }
 
-.dropdown-content div {
+.dd-content div {
   padding: 10px;
   cursor: pointer;
 }
 
-.dropdown-content div:hover {
+.dd-content div:hover {
   background-color: #ddd;
 }
 

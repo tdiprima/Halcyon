@@ -1,10 +1,14 @@
 export function colorPalette() {
-  let paletteElement = document.createElement('select');
-  paletteElement.id = 'colorPalette';
-  document.body.insertBefore(paletteElement, document.querySelector('canvas'));
+  // Create the container for the custom dropdown
+  let paletteContainer = document.createElement('div');
+  paletteContainer.className = 'dd';  // Apply the dropdown class for styling
+  paletteContainer.id = 'colorPalette';    // Set the ID if needed
+
+  // Insert the container before the canvas element
+  document.body.insertBefore(paletteContainer, document.querySelector('canvas'));
 
   if (!window.useriri) {
-    buildColorPalette(paletteElement);
+    buildColorPalette(paletteContainer);
   } else {
     fetch(`${window.useriri.replace("user", "users")}/colorclasses`, {
       method: 'GET',
@@ -20,53 +24,89 @@ export function colorPalette() {
         return response.json();
       })
       .then(data => {
-        buildColorPalette(paletteElement, data);
+        buildColorPalette(paletteContainer, data);
       })
       .catch(error => {
         console.error('There was a problem with the fetch operation:', error);
-        buildColorPalette(paletteElement);
+        buildColorPalette(paletteContainer);
       });
   }
 }
 
-function buildColorPalette(paletteElement, data) {
+function buildColorPalette(paletteContainer, data) {
+  // Clear existing content
+  paletteContainer.innerHTML = '';
+
   let options;
   if (data) {
-    options = [
-      {value: 'nothing', text: '-- Class --'}
-    ];
+    options = [];
 
-    // Create and append the options to the dropdown
+    // Add data-based options
     data.hasAnnotationClass.forEach(annotationClass => {
       const color = annotationClass.color;
       const name = annotationClass.hasClass.name;
-      options.push({value: `${color}:${name}`, text: name});
+      options.push({ value: `${color}:${name}`, text: name });
     });
   } else {
     options = [
-      {value: 'nothing', text: '-- Class --'},
-      {value: '#0f4d0f:Tumor', text: 'Tumor'},
-      {value: '#ff0000:Lymphocyte', text: 'Lymphocyte'},
-      {value: '#a700b0:Misc', text: 'Misc'},
-      {value: '#0000ff:Background', text: 'Background'}
+      { value: '#0f4d0f:Tumor', text: 'Tumor' },
+      { value: '#ff0000:Lymphocyte', text: 'Lymphocyte' },
+      { value: '#a700b0:Misc', text: 'Misc' },
+      { value: '#0000ff:Background', text: 'Background' }
     ];
   }
 
+  // Create dropdown button
+  const dropdownButton = document.createElement('div');
+  dropdownButton.className = 'dd-button';
+  dropdownButton.textContent = '-- Select Color --';
+  paletteContainer.appendChild(dropdownButton);
+
+  // Create dropdown content container
+  const dropdownContent = document.createElement('div');
+  dropdownContent.className = 'dd-content';
+  paletteContainer.appendChild(dropdownContent);
+
+  // Add options to the dropdown content
   options.forEach(opt => {
-    const option = document.createElement('option');
-    option.value = opt.value;
-    option.textContent = opt.text;
-    paletteElement.appendChild(option);
+    const optionDiv = document.createElement('div');
+    optionDiv.dataset.color = opt.value.split(':')[0];
+    optionDiv.textContent = opt.text;
+
+    // Create color box
+    const colorBox = document.createElement('div');
+    colorBox.className = 'color-box';
+    colorBox.style.backgroundColor = optionDiv.dataset.color;
+
+    optionDiv.prepend(colorBox);
+    dropdownContent.appendChild(optionDiv);
   });
 
-  paletteElement.addEventListener('change', (event) => {
-    if (event.target.value === 'nothing') {
-      window.cancerColor = '';
-      window.cancerType = '';
-    } else {
-      let arr = event.target.value.split(':');
-      window.cancerColor = arr[0];
-      window.cancerType = arr[1];
+  // Dropdown content shows up when clicked
+  dropdownButton.addEventListener('click', () => {
+    dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+  });
+
+  // Click a color / cancer type
+  dropdownContent.addEventListener('click', (event) => {
+    if (event.target && event.target.dataset.color) {
+      const color = event.target.dataset.color;
+      const text = event.target.textContent.trim();
+      dropdownButton.textContent = text;
+      dropdownContent.style.display = 'none';
+
+      // Update global variables
+      window.cancerColor = color;
+      window.cancerType = text;
+    }
+  });
+
+  // Close dropdown if clicked outside
+  window.addEventListener('click', (event) => {
+    if (!event.target.matches('.dd-button')) {
+      if (dropdownContent.style.display === 'block') {
+        dropdownContent.style.display = 'none';
+      }
     }
   });
 }
