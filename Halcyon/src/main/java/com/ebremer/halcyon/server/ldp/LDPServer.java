@@ -41,6 +41,8 @@ public class LDPServer extends DefaultServlet {
                 break;
             case "application/ld+json":
                 try (ServletOutputStream out = response.getOutputStream()) {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.setContentType(accept);
                     Tools.Resource2JSONLD(prefer,Tools.getRDF(prefer, request.getRequestURL().toString()), out);
                 }
                 break;

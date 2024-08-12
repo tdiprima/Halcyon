@@ -74,7 +74,7 @@ public class HalcyonPrincipal implements Principal, Serializable {
         } else {
             preferred_username = "";
         }
-        this.useruri = HalcyonSettings.getSettings().getHostName()+"/users/"+preferred_username;
+        this.useruri = HalcyonSettings.getSettings().getHostName()+"/user/"+preferred_username;
         if (claims.keySet().contains("HalcyonGroups")) {
             groups = (ArrayList) claims.get("HalcyonGroups");
         } else {
