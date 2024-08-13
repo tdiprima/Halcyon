@@ -156,6 +156,7 @@ export function hollowBrush(scene, camera, renderer, controls) {
 
   function onTouchStart(event) {
     if (isDrawing) {
+      ({ color, type } = getColorAndType());
       mouseIsPressed = true;
       brushShapeGroup = new THREE.Group();
       scene.add(brushShapeGroup);

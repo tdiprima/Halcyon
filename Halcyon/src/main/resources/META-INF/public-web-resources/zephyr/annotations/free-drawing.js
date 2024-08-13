@@ -153,6 +153,7 @@ export function enableDrawing(scene, camera, renderer, controls) {
 
   function onTouchStart(event) {
     if (isDrawing) {
+      setMaterial();
       mouseIsPressed = true;
 
       // Create a new BufferAttribute for each line

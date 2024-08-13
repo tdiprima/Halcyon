@@ -89,6 +89,7 @@ export function ellipse(scene, camera, renderer, controls) {
 
   function onTouchStart(event) {
     if (isDrawing) {
+      setMaterial();
       mouseIsPressed = true;
       let touch = event.touches[0];
       startPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);

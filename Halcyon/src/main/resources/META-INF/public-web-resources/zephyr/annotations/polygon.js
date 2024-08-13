@@ -99,6 +99,7 @@ export function polygon(scene, camera, renderer, controls) {
   // Touch event handlers
   function onTouchStart(event) {
     if (isDrawing) {
+      setMaterial();
       let currentTime = new Date().getTime();
       let tapInterval = currentTime - lastTapTime;
       if (tapInterval < 300 && tapInterval > 0) {

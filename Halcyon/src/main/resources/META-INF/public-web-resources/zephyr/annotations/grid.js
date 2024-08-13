@@ -80,6 +80,7 @@ export function grid(scene, camera, renderer, controls) {
       lastTapTime = currentTime;
     }
 
+    ({ color, type } = getColorAndType());
     isDragging = true;
     colorSquare(event.touches[0]);
   }
@@ -95,7 +96,7 @@ export function grid(scene, camera, renderer, controls) {
   }
 
   function addGrid() {
-    // Create a grid overlay with green lines.
+    // Create a grid overlay with blue lines.
     const gridSize = 50; // Define the size of the grid
     const squareSize = 100; // Define the size of each square in the grid
     gridLines = new THREE.Group(); // Group to hold the grid lines
