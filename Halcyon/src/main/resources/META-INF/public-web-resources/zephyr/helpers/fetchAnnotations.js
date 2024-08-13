@@ -1,5 +1,5 @@
 import { createButton } from "./elements.js";
-import { getUrl } from "./conversions.js"
+import { getUrl } from "./conversions.js";
 import { deserializeScene } from "./save.js";
 
 export function fetchAnnotations(scene) {

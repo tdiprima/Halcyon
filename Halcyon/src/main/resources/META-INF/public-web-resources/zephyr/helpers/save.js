@@ -26,7 +26,7 @@ export function save(scene) {
     function serializeObjectWithChildren(obj) {
       let serializedObj = obj.toJSON();
       // Mark all children as processed to avoid double serialization
-      obj.traverse((child) => {
+      obj.traverse(child => {
         if (child.name.includes("annotation")) {
           processedObjects.add(child.id); // Use unique object ID for tracking
         }
@@ -34,7 +34,7 @@ export function save(scene) {
       return serializedObj;
     }
 
-    scene.traverse((obj) => {
+    scene.traverse(obj => {
       // Skip if this object has already been processed
       if (processedObjects.has(obj.id)) return;
 
@@ -56,7 +56,7 @@ export function save(scene) {
     let myObject = {
       image: parts[1],
       type: "hal:Annotation"
-    }
+    };
     serializedObjects.push(myObject);
 
     // Save serializedObjects to database

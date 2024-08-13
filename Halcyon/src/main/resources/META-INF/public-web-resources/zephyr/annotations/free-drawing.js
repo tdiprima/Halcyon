@@ -15,7 +15,6 @@ export function enableDrawing(scene, camera, renderer, controls) {
   let lineMaterial = new THREE.LineBasicMaterial({color, linewidth: 5});
   let line;
   let currentPolygonPositions = []; // Store positions for current polygon
-  let polygonPositions = []; // Store positions for each polygon
   const distanceThreshold = 0.1;
   const canvas = renderer.domElement;
 
@@ -140,8 +139,6 @@ export function enableDrawing(scene, camera, renderer, controls) {
         displayAreaAndPerimeter(area, perimeter);
       }
 
-      polygonPositions.push(currentPolygonPositions); // Store the current polygon's positions
-
       // toImageCoords(currentPolygonPositions, scene);
       // deleteIcon(event, line, scene);
       // textInputPopup(event, line);
@@ -221,8 +218,6 @@ export function enableDrawing(scene, camera, renderer, controls) {
         // Display the area and perimeter
         displayAreaAndPerimeter(area, perimeter);
       }
-
-      polygonPositions.push(currentPolygonPositions); // Store the current polygon's positions
 
       currentPolygonPositions = []; // Clear the current polygon's array for the next drawing
     }
