@@ -117,6 +117,12 @@ export function edit(scene, camera, renderer, controls, originalZ) {
     return maxThreshold + (minThreshold - maxThreshold) * (maxDistance - currentDistance) / (maxDistance - minDistance);
   }
 
+  function expandBoundingBox(geometry, amount) {
+    const box = new THREE.Box3().setFromObject(geometry);
+    box.expandByScalar(amount);
+    return box;
+  }
+
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
 
@@ -132,18 +138,21 @@ export function edit(scene, camera, renderer, controls, originalZ) {
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-    try {
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(intersectableObjects);
+    raycaster.setFromCamera(mouse, camera);
 
-      if (intersects.length > 0) {
-        const selectedMesh = intersects[0].object;
-
-        // Setup deletion button & edit handles
-        setupDeletionButton(selectedMesh, addEditHandles(selectedMesh, size));
+    const intersects = [];
+    for (let i = 0; i < intersectableObjects.length; i++) {
+      const mesh = intersectableObjects[i];
+      const expandedBox = expandBoundingBox(mesh, 0.1); // Increase tolerance by 0.1
+      if (raycaster.ray.intersectsBox(expandedBox)) {
+        intersects.push(mesh);
       }
-    } catch (error) {
-      console.error("Intersection error:", error);
+    }
+
+    if (intersects.length > 0) {
+      const selectedMesh = intersects[0];
+      setupDeletionButton(selectedMesh, addEditHandles(selectedMesh, size));
+      return;
     }
   }
 
