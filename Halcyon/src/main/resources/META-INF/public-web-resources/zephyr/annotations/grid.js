@@ -70,6 +70,8 @@ export function grid(scene, camera, renderer, controls) {
   }
 
   function handleTouchStart(event) {
+    event.preventDefault(); // Prevent default behavior to avoid conflicts
+
     // Handle double-tap to toggle remove mode
     const currentTime = new Date().getTime();
     const tapInterval = currentTime - lastTapTime;
@@ -87,12 +89,15 @@ export function grid(scene, camera, renderer, controls) {
   }
 
   function handleTouchMove(event) {
+    event.preventDefault(); // Prevent default behavior
+
     if (isDragging) {
       colorSquare(event.touches[0]);
     }
   }
 
-  function handleTouchEnd() {
+function handleTouchEnd(event) {
+    event.preventDefault();
     isDragging = false;
   }
 
@@ -181,7 +186,8 @@ export function grid(scene, camera, renderer, controls) {
     if (intersects.length > 0) {
       const square = intersects[0].object;
 
-      if ((event.shiftKey || removeMode) && square.userData.colored) {
+      // if ((event.shiftKey || removeMode) && square.userData.colored) {
+      if (event.shiftKey || removeMode) {
         // Shift-click or double-tap remove mode to un-color the square
         square.material.opacity = 0;
         square.userData.colored = false;
