@@ -43,6 +43,7 @@ export function grid(scene, camera, renderer, controls) {
       canvas.addEventListener('touchend', handleTouchEnd);
 
       controls.enabled = false;
+      controls.update(); // Force an update to ensure disabling
       turnOtherButtonsOff(gridButton);
       addGrid();
       this.classList.replace('annotationBtn', 'btnOn');
