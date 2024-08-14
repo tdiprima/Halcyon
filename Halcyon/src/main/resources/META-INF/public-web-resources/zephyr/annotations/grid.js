@@ -42,8 +42,8 @@ export function grid(scene, camera, renderer, controls) {
       canvas.addEventListener('touchmove', handleTouchMove);
       canvas.addEventListener('touchend', handleTouchEnd);
 
-      ({ color, type } = getColorAndType());
       controls.enabled = false;
+      controls.update(); // Force an update to ensure disabling
       turnOtherButtonsOff(gridButton);
       addGrid();
       this.classList.replace('annotationBtn', 'btnOn');
@@ -53,6 +53,8 @@ export function grid(scene, camera, renderer, controls) {
 
   // Define named functions for event handling
   function handleMouseDown(event) {
+    // Get the current color and type on mousedown
+    ({ color, type } = getColorAndType());
     isDragging = true;
     colorSquare(event);
   }
@@ -68,6 +70,8 @@ export function grid(scene, camera, renderer, controls) {
   }
 
   function handleTouchStart(event) {
+    event.preventDefault(); // Prevent default behavior to avoid conflicts
+
     // Handle double-tap to toggle remove mode
     const currentTime = new Date().getTime();
     const tapInterval = currentTime - lastTapTime;
@@ -79,22 +83,26 @@ export function grid(scene, camera, renderer, controls) {
       lastTapTime = currentTime;
     }
 
+    ({ color, type } = getColorAndType());
     isDragging = true;
     colorSquare(event.touches[0]);
   }
 
   function handleTouchMove(event) {
+    event.preventDefault(); // Prevent default behavior
+
     if (isDragging) {
       colorSquare(event.touches[0]);
     }
   }
 
-  function handleTouchEnd() {
+function handleTouchEnd(event) {
+    event.preventDefault();
     isDragging = false;
   }
 
   function addGrid() {
-    // Create a grid overlay with green lines.
+    // Create a grid overlay with blue lines.
     const gridSize = 50; // Define the size of the grid
     const squareSize = 100; // Define the size of each square in the grid
     gridLines = new THREE.Group(); // Group to hold the grid lines
@@ -120,15 +128,12 @@ export function grid(scene, camera, renderer, controls) {
     for (let i = 0; i < gridSize; i++) {
       for (let j = 0; j < gridSize; j++) {
         const geometry = new THREE.PlaneGeometry(squareSize, squareSize);
-        const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0 });
+        const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
         const square = new THREE.Mesh(geometry, material);
 
         // Position each square
         square.position.set(i * squareSize - gridSize * squareSize / 2 + squareSize / 2, j * squareSize - gridSize * squareSize / 2 + squareSize / 2, 0);
         square.userData = { colored: false };
-        if (type.length > 0) {
-          square.userData.cancerType = type;
-        }
         gridSquares.add(square);
       }
     }
@@ -181,16 +186,19 @@ export function grid(scene, camera, renderer, controls) {
     if (intersects.length > 0) {
       const square = intersects[0].object;
 
-      if ((event.shiftKey || removeMode) && square.userData.colored) {
+      // if ((event.shiftKey || removeMode) && square.userData.colored) {
+      if (event.shiftKey || removeMode) {
         // Shift-click or double-tap remove mode to un-color the square
         square.material.opacity = 0;
         square.userData.colored = false;
         square.name = "";
       } else if (!square.userData.colored) {
         // Regular drag to color the square
+        square.material.color.set(color); // Set the color based on the selected color
         square.material.opacity = 0.5;
         square.userData.colored = true;
         square.name = "heatmap annotation";
+        square.userData.cancerType = type; // Set the cancer type
       }
     }
   }

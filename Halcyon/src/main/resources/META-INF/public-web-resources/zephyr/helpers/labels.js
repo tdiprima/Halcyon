@@ -52,6 +52,12 @@ export function label(scene, camera, renderer, controls, originalZ, type) {
     });
   }
 
+  function expandBoundingBox(geometry, amount) {
+    const box = new THREE.Box3().setFromObject(geometry);
+    box.expandByScalar(amount);
+    return box;
+  }
+
   function onMouseClick(event) {
     event.preventDefault();
 
@@ -60,10 +66,17 @@ export function label(scene, camera, renderer, controls, originalZ, type) {
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
 
-    try {
-      const intersects = raycaster.intersectObjects(objects, true);
-      if (intersects.length > 0) {
-        const selectedMesh = intersects[0].object;
+    const intersects = [];
+    for (let i = 0; i < objects.length; i++) {
+      const mesh = objects[i];
+      const expandedBox = expandBoundingBox(mesh, 0.1); // Increase tolerance by 0.1
+      if (raycaster.ray.intersectsBox(expandedBox)) {
+        intersects.push(mesh);
+      }
+    }
+
+    if (intersects.length > 0) {
+      const selectedMesh = intersects[0];
 
         if (type === "label") {
           textInputPopup(event, selectedMesh);
@@ -76,10 +89,7 @@ export function label(scene, camera, renderer, controls, originalZ, type) {
           // Display the area and perimeter
           displayAreaAndPerimeter(area, perimeter);
         }
-
+        return;
       }
-    } catch (error) {
-      console.error("Intersection error:", error);
-    }
   }
 }

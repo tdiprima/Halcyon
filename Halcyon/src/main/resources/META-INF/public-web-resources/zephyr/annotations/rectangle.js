@@ -39,16 +39,6 @@ export function rectangle(scene, camera, renderer, controls, options) {
       turnOtherButtonsOff(rectangleButton);
       controls.enabled = false;
       this.classList.replace('annotationBtn', 'btnOn');
-      ({ color, type } = getColorAndType());
-
-      if (options.select && options.select === "selection") {
-        material = new THREE.LineBasicMaterial({ color: options.color, linewidth: 5 });
-      } else {
-        material = new THREE.LineBasicMaterial({ color, linewidth: 5 });
-      }
-
-      material.depthTest = false;
-      material.depthWrite = false;
 
       canvas.addEventListener("mousedown", onMouseDown, false);
       canvas.addEventListener("mousemove", onMouseMove, false);
@@ -60,8 +50,20 @@ export function rectangle(scene, camera, renderer, controls, options) {
     }
   });
 
+  function setMaterial() {
+    ({ color, type } = getColorAndType());
+    if (options.select && options.select === "selection") {
+      material = new THREE.LineBasicMaterial({ color: options.color, linewidth: 5 });
+    } else {
+      material = new THREE.LineBasicMaterial({ color, linewidth: 5 });
+    }
+    material.depthTest = false;
+    material.depthWrite = false;
+  }
+
   function onMouseDown(event) {
     if (isDrawing) {
+      setMaterial();
       mouseIsPressed = true;
       startPoint = getMousePosition(event.clientX, event.clientY, canvas, camera);
       currentRectangle = createRectangle();
@@ -95,6 +97,7 @@ export function rectangle(scene, camera, renderer, controls, options) {
 
   function onTouchStart(event) {
     if (isDrawing) {
+      setMaterial();
       mouseIsPressed = true;
       let touch = event.touches[0];
       startPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);

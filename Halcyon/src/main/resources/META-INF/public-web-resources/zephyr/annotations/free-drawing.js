@@ -15,7 +15,6 @@ export function enableDrawing(scene, camera, renderer, controls) {
   let lineMaterial = new THREE.LineBasicMaterial({color, linewidth: 5});
   let line;
   let currentPolygonPositions = []; // Store positions for current polygon
-  let polygonPositions = []; // Store positions for each polygon
   const distanceThreshold = 0.1;
   const canvas = renderer.domElement;
 
@@ -40,17 +39,6 @@ export function enableDrawing(scene, camera, renderer, controls) {
       canvas.removeEventListener("touchend", onTouchEnd);
       canvas.removeEventListener("touchstart", onTouchStart);
     } else {
-      ({ color, type } = getColorAndType());
-
-      // Create a material for the line with the current color
-      lineMaterial = new THREE.LineBasicMaterial({ color, linewidth: 5 });
-      lineMaterial.polygonOffset = true; // Prevent z-fighting (which causes flicker)
-      lineMaterial.polygonOffsetFactor = -1; // Push the polygon further away from the camera
-      lineMaterial.depthTest = false;  // Render on top
-      lineMaterial.depthWrite = false; // Object won't be occluded
-      lineMaterial.transparent = true; // Material transparent
-      lineMaterial.alphaTest = 0.5;    // Pixels with less than 50% opacity will not be rendered
-
       // Drawing on
       isDrawing = true;
       turnOtherButtonsOff(btnDraw);
@@ -68,8 +56,22 @@ export function enableDrawing(scene, camera, renderer, controls) {
     }
   });
 
+  function setMaterial() {
+    ({ color, type } = getColorAndType());
+
+    // Create a material for the line with the current color
+    lineMaterial = new THREE.LineBasicMaterial({ color, linewidth: 5 });
+    lineMaterial.polygonOffset = true; // Prevent z-fighting (which causes flicker)
+    lineMaterial.polygonOffsetFactor = -1; // Push the polygon further away from the camera
+    lineMaterial.depthTest = false;  // Render on top
+    lineMaterial.depthWrite = false; // Object won't be occluded
+    lineMaterial.transparent = true; // Material transparent
+    lineMaterial.alphaTest = 0.5;    // Pixels with less than 50% opacity will not be rendered
+  }
+
   function onPointerDown(event) {
     if (isDrawing) {
+      setMaterial();
       mouseIsPressed = true;
 
       // Create a new BufferAttribute for each line
@@ -137,8 +139,6 @@ export function enableDrawing(scene, camera, renderer, controls) {
         displayAreaAndPerimeter(area, perimeter);
       }
 
-      polygonPositions.push(currentPolygonPositions); // Store the current polygon's positions
-
       // toImageCoords(currentPolygonPositions, scene);
       // deleteIcon(event, line, scene);
       // textInputPopup(event, line);
@@ -150,6 +150,7 @@ export function enableDrawing(scene, camera, renderer, controls) {
 
   function onTouchStart(event) {
     if (isDrawing) {
+      setMaterial();
       mouseIsPressed = true;
 
       // Create a new BufferAttribute for each line
@@ -217,8 +218,6 @@ export function enableDrawing(scene, camera, renderer, controls) {
         // Display the area and perimeter
         displayAreaAndPerimeter(area, perimeter);
       }
-
-      polygonPositions.push(currentPolygonPositions); // Store the current polygon's positions
 
       currentPolygonPositions = []; // Clear the current polygon's array for the next drawing
     }

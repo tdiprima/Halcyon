@@ -14,19 +14,34 @@ export function save(scene) {
     innerHtml: "<i class=\"fas fa-save\"></i>",
     title: "Save"
   }).addEventListener("click", function () {
-    serializeScene(scene);
+    const annotationsDiv = document.getElementById("annotations-div");
+    
+    if (annotationsDiv) {
+      const checkboxes = annotationsDiv.querySelectorAll('input[type="checkbox"]:checked');
+      
+      if (checkboxes.length === 0) {
+        alert("No session selected. Please select a session.");
+      } else if (checkboxes.length > 1) {
+        alert("Save to one session at a time.");
+      } else {
+        const selectedUrl = checkboxes[0].value;
+        serializeScene(scene, selectedUrl);
+      }
+    } else {
+      serializeScene(scene); // Save to a new file
+    }
   });
 
   let serializedObjects = [];
 
-  function serializeScene(scene) {
+  function serializeScene(scene, postUrl = null) {
     serializedObjects = [];
     let processedObjects = new Set(); // To track processed objects
 
     function serializeObjectWithChildren(obj) {
       let serializedObj = obj.toJSON();
       // Mark all children as processed to avoid double serialization
-      obj.traverse((child) => {
+      obj.traverse(child => {
         if (child.name.includes("annotation")) {
           processedObjects.add(child.id); // Use unique object ID for tracking
         }
@@ -34,7 +49,7 @@ export function save(scene) {
       return serializedObj;
     }
 
-    scene.traverse((obj) => {
+    scene.traverse(obj => {
       // Skip if this object has already been processed
       if (processedObjects.has(obj.id)) return;
 
@@ -56,13 +71,15 @@ export function save(scene) {
     let myObject = {
       image: parts[1],
       type: "hal:Annotation"
-    }
+    };
     serializedObjects.push(myObject);
 
-    // Save serializedObjects to database
-    let sections = parts[1].split("/");
-    sections.pop();
-    let postUrl = `${sections.join("/")}/${crypto.randomUUID()}.json`;
+    // Determine the URL for POST
+    if (!postUrl) {
+      let sections = parts[1].split("/");
+      sections.pop();
+      postUrl = `${sections.join("/")}/${crypto.randomUUID()}.json`;
+    }
 
     const postJSONData = async () => {
       try {

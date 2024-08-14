@@ -38,11 +38,6 @@ export function polygon(scene, camera, renderer, controls) {
       turnOtherButtonsOff(polygonButton);
       controls.enabled = false;
       this.classList.replace('annotationBtn', 'btnOn');
-      ({ color, type } = getColorAndType());
-
-      material = new THREE.LineBasicMaterial({ color, linewidth: 5 });
-      material.depthTest = false;
-      material.depthWrite = false;
 
       canvas.addEventListener("mousedown", onMouseDown, false);
       canvas.addEventListener("mousemove", onMouseMove, false);
@@ -56,8 +51,17 @@ export function polygon(scene, camera, renderer, controls) {
     }
   });
 
+  function setMaterial() {
+    ({ color, type } = getColorAndType());
+
+    material = new THREE.LineBasicMaterial({ color, linewidth: 5 });
+    material.depthTest = false;
+    material.depthWrite = false;
+  }
+
   function onMouseDown(event) {
     if (isDrawing && !mouseIsPressed) {
+      setMaterial();
       mouseIsPressed = true;
       points = []; // Reset points for a new polygon
       let point = getMousePosition(event.clientX, event.clientY, canvas, camera);
@@ -95,6 +99,7 @@ export function polygon(scene, camera, renderer, controls) {
   // Touch event handlers
   function onTouchStart(event) {
     if (isDrawing) {
+      setMaterial();
       let currentTime = new Date().getTime();
       let tapInterval = currentTime - lastTapTime;
       if (tapInterval < 300 && tapInterval > 0) {

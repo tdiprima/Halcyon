@@ -40,11 +40,6 @@ export function ellipse(scene, camera, renderer, controls) {
       turnOtherButtonsOff(ellipseButton);
       controls.enabled = false;
       this.classList.replace('annotationBtn', 'btnOn');
-      ({ color, type } = getColorAndType());
-
-      material = new THREE.LineBasicMaterial({ color, linewidth: 5 });
-      material.depthTest = false;
-      material.depthWrite = false;
 
       canvas.addEventListener("mousedown", onMouseDown, false);
       canvas.addEventListener("mousemove", onMouseMove, false);
@@ -56,8 +51,17 @@ export function ellipse(scene, camera, renderer, controls) {
     }
   });
 
+  function setMaterial() {
+    ({ color, type } = getColorAndType());
+
+    material = new THREE.LineBasicMaterial({ color, linewidth: 5 });
+    material.depthTest = false;
+    material.depthWrite = false;
+  }
+
   function onMouseDown(event) {
     if (isDrawing) {
+      setMaterial();
       mouseIsPressed = true;
       startPoint = getMousePosition(event.clientX, event.clientY, canvas, camera);
       currentEllipse = createEllipse();
@@ -85,6 +89,7 @@ export function ellipse(scene, camera, renderer, controls) {
 
   function onTouchStart(event) {
     if (isDrawing) {
+      setMaterial();
       mouseIsPressed = true;
       let touch = event.touches[0];
       startPoint = getMousePosition(touch.clientX, touch.clientY, canvas, camera);
