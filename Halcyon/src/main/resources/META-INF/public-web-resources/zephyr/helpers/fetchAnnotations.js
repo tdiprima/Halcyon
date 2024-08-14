@@ -119,6 +119,7 @@ export function fetchAnnotations(scene) {
 
       checkbox.addEventListener('change', function () {
         if (this.checked) {
+          // If the checkbox is selected, fetch the annotations again
           if (!objectMap.has(annotation)) {
             fetch(annotation)
               .then(response => {
@@ -137,16 +138,31 @@ export function fetchAnnotations(scene) {
               })
               .catch(error => alert(error.message));
           } else {
+            // If the objects are already fetched, make them visible again
             objectMap.get(annotation).forEach(obj => {
               obj.visible = true;
             });
           }
         } else {
+          // If the checkbox is deselected, remove the objects from the scene
           if (objectMap.has(annotation)) {
             objectMap.get(annotation).forEach(obj => {
-              obj.visible = false;
-              // console.log(`Hiding object: ${obj.name}`);
+              if (obj.parent) {
+                obj.parent.remove(obj); // Remove from parent
+              } else {
+                scene.remove(obj); // Fallback to remove directly from the scene
+              }
+              if (obj.geometry) obj.geometry.dispose(); // Dispose of geometry
+              if (obj.material) {
+                // Dispose of material (handle arrays of materials)
+                if (Array.isArray(obj.material)) {
+                  obj.material.forEach(material => material.dispose());
+                } else {
+                  obj.material.dispose();
+                }
+              }
             });
+            objectMap.delete(annotation); // Remove from the objectMap
           }
         }
       });
