@@ -1,6 +1,7 @@
 import { createButton } from "./elements.js";
 import { getUrl } from "./conversions.js";
 import { deserializeScene } from "./save.js";
+import { getAnnotationLabel, setAnnotationLabel } from "./sparql.js";
 
 export function fetchAnnotations(scene) {
   const button = createButton({
@@ -12,21 +13,24 @@ export function fetchAnnotations(scene) {
   let objectMap = new Map();
 
   button.addEventListener('click', () => {
-    if (document.getElementById("annotations-div")) {
-      document.getElementById("annotations-div").remove();
-      // document.getElementById("annotations-div").style.display = "none";
-    } else {
-      const div = document.createElement('div');
-      div.id = "annotations-div";
-      document.body.appendChild(div);
+    const annotationsDiv = document.getElementById("annotations-div");
 
+    if (annotationsDiv) {
+      // Toggle visibility
+      if (annotationsDiv.style.display === "none") {
+        annotationsDiv.style.display = "block";
+      } else {
+        annotationsDiv.style.display = "none";
+      }
+    } else {
+      // Create and show the div
       const url = getUrl(scene);
       const parts = url.split("?iiif=");
       const annotationUrl = parts[1];
 
       fetchA(annotationUrl).then(annotationArray => {
         if (annotationArray && annotationArray.length > 0) {
-          displayPopup(div, annotationArray);
+          displayPopup(annotationArray);
         }
       });
     }
@@ -84,36 +88,64 @@ export function fetchAnnotations(scene) {
     }
   }
 
-  function displayPopup(div, annotationArray) {
+  async function displayPopup(annotationArray) {
+    const div = document.createElement('div');
+    div.id = "annotations-div";
+    div.classList.add("floating-div");
+    document.body.appendChild(div);
+
+    // Create a draggable header for the div
+    const dragHandle = document.createElement('div');
+    dragHandle.classList.add('drag-handle');
+    dragHandle.innerHTML = "<strong>Annotation Sets:</strong>";
+    div.appendChild(dragHandle);
+
     // Create and style the close button
     const closeButton = document.createElement('span');
     closeButton.innerHTML = '&times;';
-    closeButton.style.position = 'absolute';
-    closeButton.style.top = '10px';
-    closeButton.style.right = '10px';
-    closeButton.style.cursor = 'pointer';
-    closeButton.style.fontSize = '20px';
+    closeButton.classList.add('close-button');
 
     // Add click event to hide the div
     closeButton.addEventListener('click', () => {
-      div.remove();
-      // div.style.display = 'none';
+      div.style.display = 'none';
     });
 
-    // Add the close button to the div
-    div.appendChild(closeButton);
+    dragHandle.appendChild(closeButton); // Add close button to drag handle
 
-    // Add checkboxes based on the annotation array
-    annotationArray.forEach(annotation => {
+    // Iterate through the annotations
+    for (let annotation of annotationArray) {
+      // Create checkbox
       const label = document.createElement('label');
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.value = annotation;
 
       label.appendChild(checkbox);
-      // label.appendChild(document.createTextNode(`Annotation ${index + 1}`));
-      let sections = annotation.split("/");
-      label.appendChild(document.createTextNode(sections[sections.length - 1]));
+
+      // Create text input for name
+      let name = await getAnnotationLabel(annotation);
+      const textInput = document.createElement('input');
+      textInput.type = 'text';
+      // Use annotation label or filename
+      textInput.value = name ? name : annotation.split("/").pop();
+      label.appendChild(textInput);
+
+      const updateButton = document.createElement('button');
+      updateButton.innerText = 'Rename';
+      updateButton.title = "Update Annotation Label";
+      updateButton.addEventListener('click', () => {
+        setAnnotationLabel(annotation, textInput.value);
+      });
+      label.appendChild(updateButton);
+
+      // Create text node for name
+      // if (name) {
+      //   label.appendChild(document.createTextNode(name));
+      // } else {
+      //   let sections = annotation.split("/");
+      //   label.appendChild(document.createTextNode(sections[sections.length - 1]));
+      // }
+
       div.appendChild(label);
       div.appendChild(document.createElement('br'));
 
@@ -166,34 +198,24 @@ export function fetchAnnotations(scene) {
           }
         }
       });
-    });
+    }
 
-    // Style the div
-    div.style.position = 'fixed';
-    div.style.top = '30px';
-    div.style.left = '30px';
-    div.style.width = '150px';
-    div.style.height = 'auto';
-    div.style.padding = '10px';
-    div.style.border = '1px solid #ccc';
-    div.style.background = '#fff';
-    div.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
-    div.style.zIndex = '1000';
-
-    // Make the popup draggable
-    dragElement(div);
+    // Make the div draggable by the drag handle
+    dragElement(div, dragHandle);
   }
 
-  function dragElement(element) {
+  function dragElement(element, handle) {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-    element.onmousedown = dragMouseDown;
+    handle = handle || element;
+
+    handle.addEventListener('mousedown', dragMouseDown);
 
     function dragMouseDown(e) {
       e.preventDefault();
       pos3 = e.clientX;
       pos4 = e.clientY;
-      document.onmouseup = closeDragElement;
-      document.onmousemove = elementDrag;
+      document.addEventListener('mouseup', closeDragElement);
+      document.addEventListener('mousemove', elementDrag);
     }
 
     function elementDrag(e) {
@@ -207,8 +229,8 @@ export function fetchAnnotations(scene) {
     }
 
     function closeDragElement() {
-      document.onmouseup = null;
-      document.onmousemove = null;
+      document.removeEventListener('mouseup', closeDragElement);
+      document.removeEventListener('mousemove', elementDrag);
     }
   }
 }

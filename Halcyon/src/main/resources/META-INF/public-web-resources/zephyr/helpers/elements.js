@@ -188,20 +188,14 @@ export function displayAreaAndPerimeter(area, perimeter) {
   // let perimeterInMicrons = perimeter / 4; // 1 micron = 4 pixels
 
   let div = document.createElement("div");
-  div.style.position = "absolute";
-  div.style.top = "10px";
-  div.style.left = "10px";
-  div.style.backgroundColor = "white";
-  div.style.padding = "10px";
-  div.style.border = "1px solid black";
+  div.classList.add("floating-div");
 
   // Close button
   let closeButton = document.createElement("span");
-  closeButton.style.float = "right";
-  closeButton.style.cursor = "pointer";
-  closeButton.innerHTML = "&nbsp;X";
-  closeButton.addEventListener("click", function() {
-    div.style.display = "none";
+  closeButton.innerHTML = '&times;';
+  closeButton.classList.add('close-button');
+  closeButton.addEventListener('click', () => {
+    div.remove();
   });
 
   // Additionally set timeout

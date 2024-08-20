@@ -2,12 +2,12 @@
 import * as THREE from 'three';
 import { createButton } from "./elements.js";
 import { getUrl } from "./conversions.js"
+import { setAnnotationLabel } from "./sparql.js";
 
 /**
  * Save annotations
  */
 export function save(scene) {
-  const demo = false;
 
   createButton({
     id: "save",
@@ -15,27 +15,26 @@ export function save(scene) {
     title: "Save"
   }).addEventListener("click", function () {
     const annotationsDiv = document.getElementById("annotations-div");
-    
+
     if (annotationsDiv) {
       const checkboxes = annotationsDiv.querySelectorAll('input[type="checkbox"]:checked');
-      
-      if (checkboxes.length === 0) {
-        alert("No session selected. Please select a session.");
-      } else if (checkboxes.length > 1) {
-        alert("Save to one session at a time.");
-      } else {
+
+      if (checkboxes.length === 1) {
+        // Single checkbox selection = save to the same file
         const selectedUrl = checkboxes[0].value;
-        serializeScene(scene, selectedUrl);
+        const label = prompt("Enter a label for this annotation set:", "My Annotation Set");
+        serializeScene(scene, selectedUrl, label);
+      } else {
+        // No checkboxes selected or multiple selected = save to new file
+        serializeScene(scene);
       }
     } else {
       serializeScene(scene); // Save to a new file
     }
   });
 
-  let serializedObjects = [];
-
-  function serializeScene(scene, postUrl = null) {
-    serializedObjects = [];
+  async function serializeScene(scene, postUrl = null, label = null) {
+    let serializedObjects = [];
     let processedObjects = new Set(); // To track processed objects
 
     function serializeObjectWithChildren(obj) {
@@ -65,7 +64,7 @@ export function save(scene) {
       }
     });
 
-    // Add object with properties
+    // Add object with "image" and "type" for LDP
     const url = getUrl(scene);
     const parts = url.split("?iiif=");
     let myObject = {
@@ -77,86 +76,42 @@ export function save(scene) {
     // Determine the URL for POST
     if (!postUrl) {
       let sections = parts[1].split("/");
-      sections.pop();
-      postUrl = `${sections.join("/")}/${crypto.randomUUID()}.json`;
+      sections.pop(); // remove the svs
+      postUrl = `${sections.join("/")}/${crypto.randomUUID()}.json`; // add uuid
     }
 
-    const postJSONData = async () => {
-      try {
-        const response = await fetch(postUrl, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(serializedObjects)
-        });
+    // First save the serialized objects
+    try {
+      const response = await fetch(postUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(serializedObjects)
+      });
 
-        if (response.ok) {
-          console.log('File created successfully.', response);
-        } else {
-          console.error('Error creating file:', response.status, response.statusText);
-        }
-      } catch (error) {
-        console.error('Fetch error:', error);
+      if (response.ok) {
+        console.log('File created successfully.', response);
+      } else {
+        console.error('Error creating file:', response.status, response.statusText);
+        return;  // Stop execution if the file creation fails
       }
-    };
+    } catch (error) {
+      console.error('Fetch error:', error);
+      return;  // Stop execution if there is a fetch error
+    }
 
-    postJSONData();
+    if (label) {
+      // After the resource is created, set the annotation label
+      try {
+        await setAnnotationLabel(postUrl, label);
+      } catch (error) {
+        console.error('Error setting annotation label:', error);
+      }
+    }
 
     console.log(serializedObjects);
-    // console.log(JSON.stringify(serializedObjects));
-    alert('Scene serialized successfully.');
-  }
-
-  //*******************************
-  // For demonstration and testing:
-  if (demo) {
-    createButton({
-      id: "clear",
-      innerHtml: "<i class=\"fas fa-skull\"></i>",
-      title: "clear"
-    }).addEventListener("click", function () {
-      let objectsToRemove = [];
-
-      function findAnnotations(obj) {
-        if (obj.name.includes("annotation")) {
-          // Add the object to the removal list
-          objectsToRemove.push(obj);
-        } else if (obj.children && obj.children.length) {
-          // If the object has children, check them too
-          obj.children.forEach(findAnnotations);
-        }
-      }
-
-      // Start the search with the top-level children of the scene
-      scene.children.forEach(findAnnotations);
-
-      // Now remove the collected objects and dispose of their resources
-      objectsToRemove.forEach(obj => {
-        if (obj.parent) {
-          obj.parent.remove(obj); // Ensure the object is removed from its parent
-        } else {
-          scene.remove(obj); // Fallback in case the object is directly a child of the scene
-        }
-        if (obj.geometry) obj.geometry.dispose();
-        if (obj.material) {
-          // In case of an array of materials
-          if (Array.isArray(obj.material)) {
-            obj.material.forEach(material => material.dispose());
-          } else {
-            obj.material.dispose();
-          }
-        }
-      });
-    });
-
-    createButton({
-      id: "deserialize",
-      innerHtml: "<i class=\"fa-solid fa-image\"></i>",
-      title: "deserialize"
-    }).addEventListener("click", function () {
-      deserializeScene(scene, serializedObjects);
-    });
+    alert('Annotations saved successfully.');
   }
 }
 
