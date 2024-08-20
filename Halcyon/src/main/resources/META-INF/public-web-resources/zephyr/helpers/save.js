@@ -22,18 +22,19 @@ export function save(scene) {
       if (checkboxes.length === 1) {
         // Single checkbox selection = save to the same file
         const selectedUrl = checkboxes[0].value;
-        serializeScene(scene, selectedUrl);
+        serializeScene(scene, null, selectedUrl);
       } else {
         // No checkboxes selected or multiple selected = save to new file
         const label = prompt("Enter a label for this annotation set:", "My Annotation Set");
-        serializeScene(scene, null, label);
+        serializeScene(scene, label);
       }
     } else {
-      serializeScene(scene); // Save to a new file
+      const label = prompt("Enter a label for this annotation set:", "My Annotation Set");
+      serializeScene(scene, label); // Save to a new file
     }
   });
 
-  async function serializeScene(scene, postUrl = null, label = null) {
+  async function serializeScene(scene, label, postUrl) {
     let serializedObjects = [];
     let processedObjects = new Set(); // To track processed objects
 

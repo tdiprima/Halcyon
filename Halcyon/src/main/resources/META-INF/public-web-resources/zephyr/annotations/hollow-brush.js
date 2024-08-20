@@ -32,6 +32,7 @@ export function hollowBrush(scene, camera, renderer, controls) {
   const sliderValueDisplay = document.createElement('span');
   sliderValueDisplay.id = 'sliderValueDisplay';
   sliderValueDisplay.textContent = slider.value; // Initialize with the current slider value
+  sliderValueDisplay.style.marginRight = '2px';
 
   // Insert the slider and the value display into the DOM
   document.body.insertBefore(slider, document.querySelector('canvas'));

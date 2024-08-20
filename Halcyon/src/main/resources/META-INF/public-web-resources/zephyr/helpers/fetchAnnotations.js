@@ -25,14 +25,18 @@ export function fetchAnnotations(scene) {
     } else {
       // Create and show the div
       const url = getUrl(scene);
-      const parts = url.split("?iiif=");
-      const annotationUrl = parts[1];
+      if (url) {
+        const parts = url.split("?iiif=");
+        const annotationUrl = parts[1];
 
-      fetchA(annotationUrl).then(annotationArray => {
-        if (annotationArray && annotationArray.length > 0) {
-          displayPopup(annotationArray);
-        }
-      });
+        fetchA(annotationUrl).then(annotationArray => {
+          if (annotationArray && annotationArray.length > 0) {
+            displayPopup(annotationArray);
+          }
+        });
+      } else {
+        alert('Please wait for image to load. Then try again.');
+      }
     }
   });
 

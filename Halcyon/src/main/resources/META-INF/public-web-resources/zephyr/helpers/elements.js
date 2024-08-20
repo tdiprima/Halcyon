@@ -19,7 +19,6 @@ export function createSlider({ id, title, min, max, step, value }) {
 
   sliderContainer.className = 'slider-container';
   sliderLabel.htmlFor = id;
-  // sliderLabel.textContent = title;
   sliderLabel.innerHTML = title;
   slider.type = 'range';
   slider.id = id;
@@ -33,7 +32,7 @@ export function createSlider({ id, title, min, max, step, value }) {
 
   // Apply CSS to make the container inline-block
   sliderContainer.style.display = 'inline-block';
-  sliderContainer.style.marginRight = '10px'; // add some space between sliders
+  sliderContainer.style.marginRight = '2px'; // add some space between sliders
 
   let canvas = document.querySelector('canvas');
   document.body.insertBefore(sliderContainer, canvas);
