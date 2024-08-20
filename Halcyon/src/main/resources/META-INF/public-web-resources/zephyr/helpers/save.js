@@ -22,11 +22,11 @@ export function save(scene) {
       if (checkboxes.length === 1) {
         // Single checkbox selection = save to the same file
         const selectedUrl = checkboxes[0].value;
-        const label = prompt("Enter a label for this annotation set:", "My Annotation Set");
-        serializeScene(scene, selectedUrl, label);
+        serializeScene(scene, selectedUrl);
       } else {
         // No checkboxes selected or multiple selected = save to new file
-        serializeScene(scene);
+        const label = prompt("Enter a label for this annotation set:", "My Annotation Set");
+        serializeScene(scene, null, label);
       }
     } else {
       serializeScene(scene); // Save to a new file
