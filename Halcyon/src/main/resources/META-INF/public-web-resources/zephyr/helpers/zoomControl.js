@@ -4,6 +4,7 @@ export function zoomControl(camera, controls, originalZ) {
   // Create the select element (dropdown)
   const dropdown = document.createElement('select');
   dropdown.id = 'zoomLevel';
+  dropdown.style.marginRight = '2px';
 
   // Option values and text
   const options = [

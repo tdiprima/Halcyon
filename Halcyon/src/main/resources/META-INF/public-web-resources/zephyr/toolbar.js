@@ -19,6 +19,7 @@ import { screenCapture } from "./helpers/elements.js";
 // import { shading } from "./helpers/shading.js";
 import { colorPalette } from "./helpers/colorPalette.js";
 import { brightContrast} from "./helpers/brightContrast.js";
+import { getImageName } from "./helpers/getImageName.js";
 
 export function toolbar(scene, camera, renderer, controls, originalZ) {
   colorPalette();
@@ -50,4 +51,5 @@ export function toolbar(scene, camera, renderer, controls, originalZ) {
   resetCamera(controls);
   zoomControl(camera, controls, originalZ);
   brightContrast(scene);
+  getImageName(scene);
 }
