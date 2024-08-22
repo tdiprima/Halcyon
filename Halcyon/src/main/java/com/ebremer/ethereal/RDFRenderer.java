@@ -15,7 +15,8 @@ import org.apache.wicket.model.IModel;
  */
 public class RDFRenderer implements IChoiceRenderer {
     private final RDFDetachableModel rdg;
-    
+    private final String nonSelectable = "-- Select one --"; // Ensure nonSelectable is accessible
+
     public RDFRenderer(RDFDetachableModel rdg) {
         this.rdg = rdg;
     }
@@ -24,6 +25,12 @@ public class RDFRenderer implements IChoiceRenderer {
     public Object getDisplayValue(Object t) {
         Model m = rdg.getObject();
         Node r = (Node) t;
+
+        // Check if it's the placeholder node
+        if (r.isLiteral() && r.getLiteralLexicalForm().equals(nonSelectable)) {
+            return nonSelectable; // Return the placeholder without quotes
+        }
+
         Statement s;
         try {           
             s = m.getRequiredProperty(m.createResource(r.toString()), DCTerms.title);

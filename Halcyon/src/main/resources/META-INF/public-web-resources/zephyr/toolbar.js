@@ -20,8 +20,10 @@ import { screenCapture } from "./helpers/elements.js";
 import { colorPalette } from "./helpers/colorPalette.js";
 import { brightContrast} from "./helpers/brightContrast.js";
 import { getImageName } from "./helpers/getImageName.js";
+// import { getRaycastHits } from "./helpers/raycastHits.js";
 
 export function toolbar(scene, camera, renderer, controls, originalZ) {
+  // getRaycastHits(scene, camera, renderer); // for testing
   colorPalette();
   enableDrawing(scene, camera, renderer, controls);
   rectangle(scene, camera, renderer, controls, {

@@ -1,6 +1,10 @@
 // Helper function to execute SPARQL queries
-function executeSparqlQuery(query, token, isUpdate = false) {
-  const endpoint = "https://beak.bmi.stonybrook.edu:8889/rdf";
+async function executeSparqlQuery(query, token, isUpdate = false) {
+  const endpoint = `${window.location.origin}/rdf`;
+
+  if (!token) {
+    token = await getToken(); // This shouldn't happen, but just in case.
+  }
 
   const options = {
     method: 'POST',
@@ -11,7 +15,6 @@ function executeSparqlQuery(query, token, isUpdate = false) {
     body: query
   };
 
-  // Log the query to check its structure
   // console.log("SPARQL Query:", query);
 
   return fetch(endpoint, options)
@@ -101,4 +104,50 @@ SELECT ?name WHERE {
       console.error('Error retrieving annotation label:', error);
       throw error;
     });
+}
+
+// This scenario shouldn't happen; handling just in case:
+async function getCredentials() {
+  const username = prompt("Please enter your username:");
+  const password = prompt("Please enter your password:");
+
+  return { username, password };
+}
+
+async function getToken() {
+  const { username, password } = await getCredentials();
+
+  const authEndpoint = `${window.location.origin}/auth/realms/Halcyon/protocol/openid-connect/token`;
+  const authData = new URLSearchParams({
+    client_id: 'account',
+    username: username,
+    password: password,
+    grant_type: 'password'
+  });
+
+  try {
+    const response = await fetch(authEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: authData
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+
+      // Store the token in the window object
+      window.token = data.access_token;
+
+      return data.access_token;
+    } else {
+      const errorText = await response.text();
+      console.error('Error fetching token:', response.status, response.statusText, errorText);
+    }
+  } catch (error) {
+    console.error('Fetch error:', error);
+  }
+
+  return null;
 }
