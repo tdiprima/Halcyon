@@ -31,21 +31,39 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.Literal;
 
 /**
+ * A page for editing a collection, where it creates a form with fields to edit
+ * the collection's title and buttons to save or reset changes, and displays a
+ * table with access information and actions for associated items
  *
  * @author erich
  */
 public class EditCollection extends BasePage {
+
     private RDFDetachableModel mod;
-    
+
     public EditCollection(final PageParameters parameters) {
         String uuid = parameters.get("container").toString();
         Resource container = ResourceFactory.createResource(uuid);
         Dataset ds = DatabaseLocator.getDatabase().getDataset();
-        Model mmm = ModelFactory.createDefaultModel();        
+        Model mmm = ModelFactory.createDefaultModel();
         ds.begin(ReadWrite.READ);
-        mmm.add(ds.getNamedModel(HAL.CollectionsAndResources).getRequiredProperty(container, DCTerms.title, null));
+        Statement titleStmt = ds.getNamedModel(HAL.CollectionsAndResources).getProperty(container, DCTerms.title);
+        if (titleStmt != null) {
+            mmm.add(titleStmt);
+        } else {
+            // Provide a default value if the title is missing
+            Literal defaultTitle = mmm.createLiteral("Untitled Collection");
+            mmm.add(container, DCTerms.title, defaultTitle);
+
+            // Or use the UUID as a title
+            // mmm.add(container, DCTerms.title, mmm.createLiteral(uuid));
+            // System.out.println("Title property not found for container: " + uuid);
+        }
+
         ds.end();
         mod = new RDFDetachableModel(mmm);
         LDModel ldm = new LDModel(mod);
@@ -56,18 +74,32 @@ public class EditCollection extends BasePage {
             public void onSubmit() {
                 Dataset ds = DatabaseLocator.getDatabase().getDataset();
                 ds.begin(ReadWrite.WRITE);
-                ds.getNamedModel(HAL.CollectionsAndResources).remove(mod.loadOriginal());
-                ds.getNamedModel(HAL.CollectionsAndResources).add(mod.load());
-                ds.commit();
-                ds.end();
+                try {
+                    Model original = mod.loadOriginal();
+                    Model updated = mod.load();
+                    if (original == null || updated == null) {
+                        System.out.println("Original or updated model is null");
+                    } else {
+                        ds.getNamedModel(HAL.CollectionsAndResources).remove(original);
+                        ds.getNamedModel(HAL.CollectionsAndResources).add(updated);
+                    }
+                    ds.commit();
+                } catch (Exception e) {
+                    ds.abort();
+                    System.out.println(e.getMessage());
+                } finally {
+                    ds.end();
+                }
                 setResponsePage(Collections.class);
-            }}.setDefaultFormProcessing(true)
+            }
+        }.setDefaultFormProcessing(true)
         );
         form.add(new Button("resetButton") {
             @Override
             public void onSubmit() {
                 setResponsePage(EditCollection.class);
-            }}.setDefaultFormProcessing(false)
+            }
+        }.setDefaultFormProcessing(false)
         );
         add(form);
         List<IColumn<Solution, String>> columns = new ArrayList<>();
@@ -77,8 +109,8 @@ public class EditCollection extends BasePage {
                 Solution s = model.getObject();
                 int numRead = (int) s.getMap().get("numRead").getLiteralValue();
                 int numWrite = (int) s.getMap().get("numWrite").getLiteralValue();
-                String d = (numRead>0) ? "R":"";
-                d = d + ((numWrite>0) ? "W":"");
+                String d = (numRead > 0) ? "R" : "";
+                d = d + ((numWrite > 0) ? "W" : "");
                 cellItem.add(new Label(componentId, d));
             }
         });
@@ -88,7 +120,7 @@ public class EditCollection extends BasePage {
                 cellItem.add(new CollectionActionPanel(componentId, model, uuid));
             }
         });
-        columns.add(new NodeColumn<>(org.apache.wicket.model.Model.of("Name"),"name","name"));
+        columns.add(new NodeColumn<>(org.apache.wicket.model.Model.of("Name"), "name", "name"));
         ParameterizedSparqlString pss = new ParameterizedSparqlString(
             """
             select ?s ?name (count(distinct ?aclRead) as ?numRead) (count(distinct ?aclWrite) as ?numWrite)
@@ -107,7 +139,7 @@ public class EditCollection extends BasePage {
         pss.setNsPrefix("wac", WAC.NS);
         pss.setIri("SecurityGraph", HAL.SecurityGraph.getURI());
         System.out.println(pss.toString());
-        SelectDataProvider rdfsdf = new SelectDataProvider(ds,pss.toString());
+        SelectDataProvider rdfsdf = new SelectDataProvider(ds, pss.toString());
         rdfsdf.SetSPARQL(pss.toString());
         AjaxFallbackDefaultDataTable table = new AjaxFallbackDefaultDataTable<>("table", columns, rdfsdf, 35);
         add(table);

@@ -58,6 +58,11 @@ import org.apache.wicket.request.resource.CssResourceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This class displays a list of images with their respective width and height, 
+ * along with a view option, and allows for filtering based on selected features 
+ * and collection.
+ */
 public class ListImages extends BasePage implements IPanelChangeListener {
 
     private final ListFeatures lf;
@@ -81,7 +86,7 @@ public class ListImages extends BasePage implements IPanelChangeListener {
             }
         });
         ParameterizedSparqlString pss = new ParameterizedSparqlString(
-                """
+            """
             select distinct ?s ?width ?height #?md5
             where {
                 graph ?car {?collection ldp:contains ?s}
@@ -110,17 +115,15 @@ public class ListImages extends BasePage implements IPanelChangeListener {
         RDFDetachableModel rdg = new RDFDetachableModel(Patterns.getALLCollectionRDF());
         LDModel ldm = new LDModel(rdg);
 
-        String nonSelectable = "-- Select one --";
-
         ddc
                 = new DropDownChoice<>("collection", ldm,
-                        new LoadableDetachableModel<List<Node>>() {
+                    new LoadableDetachableModel<List<Node>>() {
                     @Override
                     protected List<Node> load() {
                         org.apache.jena.rdf.model.Model ccc = ModelFactory.createDefaultModel();
                         List<Node> collections = new LinkedList<>();
                         // Add a placeholder item
-                        collections.add(NodeFactory.createLiteral(nonSelectable));
+                        collections.add(NodeFactory.createLiteralByValue("-- Select one --", null));
                         try {
                             HalcyonPrincipal p = HalcyonSession.get().getHalcyonPrincipal();
                             String uuid = p.getUserURI();

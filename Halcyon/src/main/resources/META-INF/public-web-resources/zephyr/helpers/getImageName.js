@@ -2,8 +2,8 @@ import { getUrl } from "./conversions.js";
 
 export function getImageName(scene) {
   addEventListener("DOMContentLoaded", (event) => {
-    const checkInterval = 1000; // 1 second
-    const maxAttempts = 10; // Stop after 10 attempts (10 seconds)
+    const checkInterval = 1500;
+    const maxAttempts = 10; // Stop after 10 attempts
 
     let attempt = 0;
 

@@ -10,12 +10,15 @@ import org.apache.wicket.markup.html.form.IChoiceRenderer;
 import org.apache.wicket.model.IModel;
 
 /**
- *
+ * This class renders RDF nodes as display values for a choice component, using 
+ * title or name properties if available, and falling back to the node's string 
+ * representation.
+ * 
  * @author erich
  */
 public class RDFRenderer implements IChoiceRenderer {
     private final RDFDetachableModel rdg;
-    private final String nonSelectable = "-- Select one --"; // Ensure nonSelectable is accessible
+    private final String nonSelectable = "-- Select one --";
 
     public RDFRenderer(RDFDetachableModel rdg) {
         this.rdg = rdg;
