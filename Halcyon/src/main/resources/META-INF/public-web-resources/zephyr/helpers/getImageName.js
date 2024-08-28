@@ -13,7 +13,7 @@ export function getImageName(scene) {
         const imageName = url.split("/").pop();
         // const parts = imageName.split(".");
         // const firstPart = parts[0];
-        const textNode = document.createTextNode(`Image: ${imageName}`);
+        const textNode = document.createTextNode(imageName.toString());
         const divElement = document.createElement("div");
         divElement.style.display = "inline-block";
         divElement.style.paddingLeft = "10px";

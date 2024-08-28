@@ -40,18 +40,21 @@ function buildColorPalette(paletteContainer, data) {
   let options;
   if (data) {
     options = [];
+    // console.log("data:", JSON.stringify(data));
 
     // Add data-based options
     data.hasAnnotationClass.forEach(annotationClass => {
-      const color = annotationClass.color;
-      const name = annotationClass.hasClass.name;
-      options.push({ value: `${color}:${name}`, text: name });
+      if (annotationClass.hasClass) {
+        const color = annotationClass.color;
+        const name = annotationClass.hasClass.name;
+        options.push({ value: `${color}:${name}`, text: name });
+      }
     });
   } else {
     options = [
-      { value: '#0f4d0f:Tumor', text: 'Tumor' },
+      { value: '#ffff00:Tumor', text: 'Tumor' },
       { value: '#ff0000:Lymphocyte', text: 'Lymphocyte' },
-      { value: '#a700b0:Misc', text: 'Misc' },
+      { value: '#00ff00:Misc', text: 'Misc' },
       { value: '#0000ff:Background', text: 'Background' }
     ];
   }
