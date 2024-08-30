@@ -27,7 +27,13 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
 
+/**
+ * This class generates a dynamic form, designed to display and validate RDF
+ * data against a SHACL shape, allowing users to interact with and modify the
+ * RDF model based on the defined predicates and shapes.
+ */
 public class SHACLForm extends Panel implements IMarkupResourceStreamProvider {
+
     private final DropDownChoice<Bundle> ddc;
     private Node subject;
     private final CommandNode cn;
@@ -36,12 +42,12 @@ public class SHACLForm extends Panel implements IMarkupResourceStreamProvider {
         super(id);
         this.cn = cn;
         DetachableResource dr = new DetachableResource(r);
-        this.subject = r.asNode();       
+        this.subject = r.asNode();
         Form form = new Form("form");
-        HShapes hs = new HShapes();       
+        HShapes hs = new HShapes();
         RepeatingView parentRepeatingView = new RepeatingView("prv");
         form.add(parentRepeatingView);
-        ResultSet rs = hs.getPredicateFormElements(r,shape);
+        ResultSet rs = hs.getPredicateFormElements(r, shape);
         WebMarkupContainer parentItem;
         while (rs.hasNext()) {
             int c = 0;
@@ -68,7 +74,7 @@ public class SHACLForm extends Panel implements IMarkupResourceStreamProvider {
             if (qs.contains("viewers")) {
                 v = NodeFactory.createURI(qs.get("viewers").asLiteral().getString());
             }
-            if (qs.contains("viewers")&&v.equals(DASH.ValueTableViewer.asNode())) {               
+            if (qs.contains("viewers") && v.equals(DASH.ValueTableViewer.asNode())) {
                 GridPanel grid;
                 if (qs.contains("subshapes")) {
                     String subshape = qs.get("subshapes").asLiteral().getString().split(",")[0];
@@ -79,7 +85,7 @@ public class SHACLForm extends Panel implements IMarkupResourceStreamProvider {
                 }
                 childRepeatingView.add(grid);
             } else {
-                ResultSet rrs = hs.getStatementFormElements(r,predicate,shape);
+                ResultSet rrs = hs.getStatementFormElements(r, predicate, shape);
                 while (rrs.hasNext()) {
                     QuerySolution qqs = rrs.next();
                     Statement ma = r.getModel().asStatement(Triple.create(r.asNode(), predicate.asNode(), qqs.get("object").asNode()));
@@ -88,7 +94,7 @@ public class SHACLForm extends Panel implements IMarkupResourceStreamProvider {
                         messages = qqs.get("messages").asLiteral().getString();
                     }
                     PredicateObject predicateObject = new PredicateObject(childRepeatingView.newChildId(), ma, hs, messages, shape, this, qqs, cn);
-                    if (c>0) {
+                    if (c > 0) {
                         predicateObject.setLabelVisible(false);
                     }
                     childRepeatingView.add(predicateObject);
@@ -96,24 +102,29 @@ public class SHACLForm extends Panel implements IMarkupResourceStreamProvider {
                 }
             }
         }
+
         form.add(new AjaxButton("saveButton") {
             @Override
             public void onSubmit(AjaxRequestTarget target) {
                 HShapes hshapes = new HShapes();
-                hshapes.Validate(dr.getObject().getModel());
-                Component parent = SHACLForm.this.getParent();
-                if (subject.isBlank()) {
-                    SHACLForm newsf = new SHACLForm(SHACLForm.this.getId(), dr.getObject().getModel().createResource(AnonId.create(subject.getBlankNodeLabel())), shape, cn);
+                try {
+                    hshapes.Validate(dr.getObject().getModel());
+                    Component parent = SHACLForm.this.getParent();
+                    SHACLForm newsf = createNewSHACLForm(dr.getObject(), subject, shape, cn);
                     SHACLForm.this.replaceWith(newsf);
-                } else {
-                    SHACLForm newsf = new SHACLForm(SHACLForm.this.getId(), dr.getObject().getModel().createResource(subject.getURI()), shape, cn);
-                    SHACLForm.this.replaceWith(newsf);
+                    //RDFDataMgr.write(System.out, dr.getObject().getModel(), Lang.TURTLE);
+                    cn.Post(dr.getObject().getModel());
+                    // Save operation completed successfully
+                    target.add(parent);
+                } catch (Exception e) {
+                    // Log error
+                    System.err.println("Error during save operation: " + e.getMessage());
+                    // Add feedback to the user
+                    target.appendJavaScript("alert('An error occurred during the save operation. Please try again.');");
                 }
-                //RDFDataMgr.write(System.out, dr.getObject().getModel(), Lang.TURTLE);
-                cn.Post(dr.getObject().getModel());
-                target.add(parent);
-            }}.setDefaultFormProcessing(true)
-        );
+            }
+        }.setDefaultFormProcessing(true));
+
         form.add(new AjaxButton("deleteButton") {
             @Override
             public void onSubmit(AjaxRequestTarget target) {
@@ -122,7 +133,8 @@ public class SHACLForm extends Panel implements IMarkupResourceStreamProvider {
                 //SHACLForm newsf = new SHACLForm(SHACLForm.this.getId(), mod, mod.getObject().createResource(subject.getURI()), shape);
                 //SHACLForm.this.replaceWith(newsf);
                 //target.add(parent);
-            }}.setDefaultFormProcessing(true)
+            }
+        }.setDefaultFormProcessing(true)
         );
         form.add(new AjaxButton("resetButton") {
             @Override
@@ -130,27 +142,25 @@ public class SHACLForm extends Panel implements IMarkupResourceStreamProvider {
                 HShapes hshapes = new HShapes();
                 hshapes.Validate(dr.getObject().getModel());
                 Component parent = SHACLForm.this.getParent();
-                if (subject.isBlank()) {
-                    SHACLForm newsf = new SHACLForm(SHACLForm.this.getId(), dr.getObject().getModel().createResource(AnonId.create(subject.getBlankNodeLabel())), shape, cn);
-                    SHACLForm.this.replaceWith(newsf);
-                } else {
-                    SHACLForm newsf = new SHACLForm(SHACLForm.this.getId(), dr.getObject().getModel().createResource(subject.getURI()), shape, cn);
-                    SHACLForm.this.replaceWith(newsf);
-                }
+                SHACLForm newsf = createNewSHACLForm(dr.getObject(), subject, shape, cn);
+                SHACLForm.this.replaceWith(newsf);
                 //RDFDataMgr.write(System.out, dr.getObject().getModel(), Lang.TURTLE);
                 target.add(parent);
-            }}.setDefaultFormProcessing(false)
+            }
+        }.setDefaultFormProcessing(false)
         );
         add(form);
-        ddc = new DropDownChoice<>("predicates", new Model<Bundle>(), hs.getStatsAndPredicates(shape,r), new BundleRender());
-        ddc.setNullValid(true);
+        ddc = new DropDownChoice<>("predicates", new Model<Bundle>(), hs.getStatsAndPredicates(shape, r), new BundleRender());
+        ddc.setNullValid(false); // Disallow null selections
         ddc.add(new OnChangeAjaxBehavior() {
             @Override
             protected void onUpdate(AjaxRequestTarget target) {
-                if (ddc.getModelObject()!=null) {
+                Bundle selectedBundle = ddc.getModelObject();
+                if (selectedBundle != null) {
+                    // Valid selection, proceed with the logic
                     Component parent = SHACLForm.this.getParent();
                     HShapes hshapes = new HShapes();
-                    Resource zz = dr.getObject().getModel().createResource(ddc.getModelObject().getNode().getURI());
+                    Resource zz = dr.getObject().getModel().createResource(selectedBundle.getNode().getURI());
                     if (subject.isBlank()) {
                         hshapes.createProperty(shape, zz.getModel(), zz.getModel().createResource(AnonId.create(subject.getBlankNodeLabel())), zz);
                     } else {
@@ -159,33 +169,43 @@ public class SHACLForm extends Panel implements IMarkupResourceStreamProvider {
                     //System.out.println("ADDED DATA =======================================");
                     //RDFDataMgr.write(System.out, dr.getObject().getModel(), Lang.TURTLE);
                     //System.out.println("^^^^^^^^^^^^^^^^^^^  ============================");
-                    SHACLForm newsf;
-                    if (subject.isBlank()) {
-                        newsf = new SHACLForm(SHACLForm.this.getId(), dr.getObject().getModel().createResource(AnonId.create(subject.getBlankNodeLabel())), shape, cn);
-                    } else {
-                        newsf = new SHACLForm(SHACLForm.this.getId(), dr.getObject().getModel().createResource(subject.getURI()), shape, cn);
-                    }
+                    SHACLForm newsf = createNewSHACLForm(dr.getObject(), subject, shape, cn);
                     SHACLForm.this.replaceWith(newsf);
                     target.add(parent);
+                } else {
+                    // Invalid selection, show a warning
+                    System.out.println("No valid selection made in DropDownChoice.");
+                    target.appendJavaScript("alert('Please select a valid option.');");
                 }
             }
         });
+
         form.add(ddc);
     }
-    
+
     @Override
     public IResourceStream getMarkupResourceStream(MarkupContainer container, Class<?> containerClass) {
         StringBuilder sb = new StringBuilder();
         sb.append("<wicket:panel><form wicket:id=\"form\">")
-            .append("<input type=\"submit\" wicket:id=\"saveButton\" value=\"save\" />")
-            .append("<input type=\"submit\" wicket:id=\"deleteButton\" value=\"delete\" />")
-            .append("<input type=\"submit\" wicket:id=\"resetButton\" value=\"reset\" />")
-            .append("<select wicket:id=\"predicates\">Predicates</select>")
-            .append("<div wicket:id=\"prv\"><label wicket:id=\"predicatename\"/><label wicket:id=\"predicatemessages\"/><div wicket:id=\"childRepeatingView\"></div></div>")
-            .append("</form></wicket:panel>");
+                .append("<input type=\"submit\" wicket:id=\"saveButton\" value=\"save\" />")
+                .append("<input type=\"submit\" wicket:id=\"deleteButton\" value=\"delete\" />")
+                .append("<input type=\"submit\" wicket:id=\"resetButton\" value=\"reset\" />")
+                .append("<select wicket:id=\"predicates\">Predicates</select>")
+                .append("<div wicket:id=\"prv\"><label wicket:id=\"predicatename\"/><label wicket:id=\"predicatemessages\"/><div wicket:id=\"childRepeatingView\"></div></div>")
+                .append("</form></wicket:panel>");
         return new StringResourceStream(sb.toString());
     }
-    
+
+    private SHACLForm createNewSHACLForm(Resource resource, Node subject, Node shape, CommandNode cn) {
+        if (subject.isBlank()) {
+            // Recreating SHACLForm with a blank node subject
+            return new SHACLForm(this.getId(), resource.getModel().createResource(AnonId.create(subject.getBlankNodeLabel())), shape, cn);
+        } else {
+            // Recreating SHACLForm with a URI subject
+            return new SHACLForm(this.getId(), resource.getModel().createResource(subject.getURI()), shape, cn);
+        }
+    }
+
     /*
     @Override
     public String getCacheKey(MarkupContainer container, Class<?> containerClass) {

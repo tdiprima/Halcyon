@@ -44,6 +44,9 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.CssResourceReference;
 
 /**
+ * Displays a table of LDP containers (collections), allows creating new
+ * collections, and provides actions to access, delete, and add files to
+ * existing collections.
  *
  * @author erich
  */
@@ -99,7 +102,8 @@ public class Collections extends BasePage {
                             graph ?s {?s a ldp:Container}
                         }
                         """
-                );                                                              
+                );
+                pss.setNsPrefix("ldp", LDP.NS);
                 pss.setNsPrefix("so", SchemaDO.NS);
                 pss.setIri("g", HAL.CollectionsAndResources.getURI());
                 UpdateRequest updateRequest = UpdateFactory.create(pss.toString());
