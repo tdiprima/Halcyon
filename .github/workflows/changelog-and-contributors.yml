@@ -30,7 +30,8 @@ jobs:
             git log --pretty=format:'%ad | %an | %s' --no-merges > changelog.md
           fi
           # Generate a list of contributors
-          git log --format='%aN' | sort -u > contributors.txt
+          output=$(git log --format='%aN' | sort -u)
+          echo "$output" > contributors.txt
           
       - name: Commit and Push Changes
         run: |
