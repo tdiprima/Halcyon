@@ -1,9 +1,3 @@
-:root {
-  --highlight: #537895;
-  --text-light: #27374c;
-  --grad: #d7e1ec;
-}
-
 body {
   font-family: Verdana, Tahoma, Arial, Helvetica, sans-serif;
 }
@@ -102,12 +96,7 @@ body {
   border: 1px solid #000;
 }
 
-/* Buttons */
-.btnOn {
-  padding: .2em .7em;
-  color: #15f4ee;
-}
-
+/* General button styles */
 .annotationBtn,
 .btnOn,
 .layer {
@@ -117,6 +106,40 @@ body {
   border: 1px solid;
   border-radius: 5px;
   margin-right: 1px;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+/* Button active (on) styles */
+.btnOn {
+  padding: .2em .7em;
+  color: white;
+  border-color: #0046ff;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  box-shadow: 0 4px 6px rgba(0, 70, 255, 0.3);
+  cursor: pointer;
+}
+
+.btnOn:hover {
+  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+  box-shadow: 0 6px 8px rgba(0, 70, 255, 0.5);
+}
+
+/* General button hover effects */
+.annotationBtn:hover,
+.layer:hover {
+  background: linear-gradient(135deg, #d7e1ec 0%, #fff 74%);
+  color: #537895;
+  box-shadow: 0 4px 6px rgba(83, 120, 149, 0.3);
+}
+
+/* General button styles */
+.annotationBtn {
+  padding: .2em .7em;
+  cursor: pointer;
+  color: #27374c;
+  border-color: #ddd;
+  background: linear-gradient(135deg, #fff 0%, #d7e1ec 74%);
+  background-color: #fff;
 }
 
 .annotationBtn:active,
@@ -125,20 +148,11 @@ body {
   top: 1px;
 }
 
-.annotationBtn {
-  padding: .2em .7em;
-  cursor: pointer;
-  color: var(--text-light);
-  border: #ddd;
-  background: -webkit-gradient(linear, left top, left bottom, from(#fff), color-stop(74%, var(--grad)));
-  background: -o-linear-gradient(top, #fff 0%, var(--grad) 74%);
-  background: linear-gradient(to bottom, #fff 0%, var(--grad) 74%);
-  background-color: #fff;
+/* Disabled button styles (optional) */
+.annotationBtn:disabled,
+.layer:disabled {
+  background: #f0f0f0;
+  color: #ccc;
+  cursor: not-allowed;
 }
 
-.annotationBtn:hover {
-  color: var(--highlight);
-  background: -webkit-gradient(linear, left top, left bottom, from(var(--grad)), color-stop(74%, #fff));
-  background: -o-linear-gradient(top, var(--grad) 0%, #fff 74%);
-  background: linear-gradient(to bottom, var(--grad) 0%, #fff 74%);
-}

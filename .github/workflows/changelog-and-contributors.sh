@@ -14,6 +14,7 @@ fi
 
 rm latest_commit.txt
 
+# Format the changelog
 python format.py
 
 # Get contributors
