@@ -20,15 +20,19 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.resource.ContextRelativeResource;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  *
  * @author erich
  */
 public class GridPanel extends Panel implements IMarkupResourceStreamProvider {
+
     private final DetachableResource subject;
     private final DetachableResource property;
     private final RDFDataTable table;
+    private static final Logger logger = Logger.getLogger(GridPanel.class.getName());
 
     public GridPanel(String id, Resource subject, Property property, Node shape) {
         super(id);
@@ -36,8 +40,8 @@ public class GridPanel extends Panel implements IMarkupResourceStreamProvider {
         this.property = new DetachableResource(property);
         RDFProvider rp = new RDFProvider(subject, property, shape);
         List<AbstractColumn<Resource, Node>> columns = new ArrayList<>();
-        rp.getPredicates(shape).forEach((k,v)->{
-            columns.add(new PredicateColumn(Model.of(v.name()),v.node(),v.node(), rp));
+        rp.getPredicates(shape).forEach((k, v) -> {
+            columns.add(new PredicateColumn(Model.of(v.name()), v.node(), v.node(), rp));
         });
         columns.add(new AbstractColumn<Resource, Node>(Model.of("")) {
             @Override
@@ -48,7 +52,7 @@ public class GridPanel extends Panel implements IMarkupResourceStreamProvider {
         table = new RDFDataTable("table", columns, rp, 5);
         add(table);
     }
-    
+
     @Override
     public IResourceStream getMarkupResourceStream(MarkupContainer mc, Class<?> type) {
         return new StringResourceStream("""
@@ -57,8 +61,9 @@ public class GridPanel extends Panel implements IMarkupResourceStreamProvider {
             </wicket:panel>
         """);
     }
-    
+
     private class ActionPanel extends Panel {
+
         public ActionPanel(String id, IModel<Resource> model) {
             super(id, model);
             AjaxSubmitLink imageButton = new AjaxSubmitLink("imageButton") {
@@ -69,11 +74,23 @@ public class GridPanel extends Panel implements IMarkupResourceStreamProvider {
                     target.add(table);
                 }
             };
-            ContextRelativeResource ha = new ContextRelativeResource("images/minus.png");
-            Image image = new Image("buttonImage", ha);
-            image.add(AttributeModifier.replace("width", "25"));
-            image.add(AttributeModifier.replace("height", "25"));
-            imageButton.add(image);
+            String img = "images/minus.png";
+
+            try {
+                ContextRelativeResource ha = new ContextRelativeResource(img);
+                if (ha.getResourceStream() != null) {
+                    Image image = new Image("buttonImage", ha);
+                    image.add(AttributeModifier.replace("width", "25"));
+                    image.add(AttributeModifier.replace("height", "25"));
+                    imageButton.add(image);
+                } else {
+                    // It should still function as a clickable element.
+                    logger.log(Level.WARNING, "Image {0} not found", img);
+                }
+            } catch (Exception ex) {
+                logger.log(Level.SEVERE, ex.getMessage());
+            }
+
             add(imageButton);
         }
     }

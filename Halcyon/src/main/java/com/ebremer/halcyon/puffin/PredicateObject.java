@@ -19,15 +19,19 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.resource.ContextRelativeResource;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  *
  * @author erich
  */
 public class PredicateObject extends Panel implements IMarkupResourceStreamProvider {
+
     private final Triple triple;
     private final Label label;
     private final CommandNode cn;
+    private static final Logger logger = Logger.getLogger(PredicateObject.class.getName());
 
     public PredicateObject(String id, Statement s, HShapes hs, String messages, Node shape, SHACLForm form, QuerySolution qs, CommandNode cn) {
         super(id);
@@ -42,7 +46,7 @@ public class PredicateObject extends Panel implements IMarkupResourceStreamProvi
         WebMarkupContainer divobject = new WebMarkupContainer("divobject");
         divobject.setOutputMarkupId(true);
         divobject.add(AttributeModifier.replace("style", "display: inline-block;"));
-        WebMarkupContainer divdelete = new WebMarkupContainer("divdelete"); 
+        WebMarkupContainer divdelete = new WebMarkupContainer("divdelete");
         divdelete.add(AttributeModifier.replace("style", "display: inline-block;"));
         WebMarkupContainer divstatus = new WebMarkupContainer("divstatus");
         divstatus.add(AttributeModifier.replace("style", "display: inline-block;"));
@@ -70,17 +74,31 @@ public class PredicateObject extends Panel implements IMarkupResourceStreamProvi
             }
         };
         deleteButton.setDefaultFormProcessing(true);
-        ContextRelativeResource ha = new ContextRelativeResource("images/minus.png");
-        Image image = new Image("buttonImage", ha);
-        image.add(AttributeModifier.replace("width", "25"));
-        image.add(AttributeModifier.replace("height", "25"));
-        deleteButton.add(image);
+        String img = "images/minus.png";
+
+        try {
+            ContextRelativeResource ha = new ContextRelativeResource(img);
+            if (ha.getResourceStream() != null) {
+                Image image = new Image("buttonImage", ha);
+                image.add(AttributeModifier.replace("width", "25"));
+                image.add(AttributeModifier.replace("height", "25"));
+                deleteButton.add(image);
+            } else {
+                // It should still function as a clickable element.
+                logger.log(Level.WARNING, "Image {0} not found", img);
+            }
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, ex.getMessage());
+        }
+
         divdelete.add(deleteButton);
+
         HShapes hshapes = new HShapes();
         Predicate p = hshapes.getPredicate(s.getPredicate(), shape);
         divobject.add(new RDFPanel("object", s, p));
+
     }
-    
+
     public void setLabelVisible(boolean visible) {
         label.setVisible(visible);
     }

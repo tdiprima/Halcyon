@@ -84,14 +84,22 @@
                 background-color: #ffffff;
             }
 
-            a {
-                color: #0000ab;
+            td[wicket\:id="cells"] div[wicket\:id="cell"] a {
+                margin-right: 5px;
                 text-decoration: none;
+                color: #0000ab;
             }
 
-            a:hover {
-                color: #0000ab;
+            td[wicket\:id="cells"] div[wicket\:id="cell"] a:hover {
                 text-decoration: underline;
+            }
+
+            td[wicket\:id="cells"] div[wicket\:id="cell"] a.disabled {
+                color: #ccc;
+                cursor: not-allowed;
+            }
+            .wicket_orderDown {
+                color: #ffffff !important;
             }
         </style>
         <form wicket:id="yayaya">

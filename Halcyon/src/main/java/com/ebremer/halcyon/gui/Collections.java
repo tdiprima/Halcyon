@@ -82,7 +82,7 @@ public class Collections extends BasePage {
         add(new AjaxFallbackDefaultDataTable<>("table", columns, rdfsdf,35)); 
         
         Button button = new Button("newCollection");
-        button.setVisible(false);
+//        button.setVisible(false);
         button.add(new AjaxEventBehavior("click") {
             @Override
             protected void onEvent(AjaxRequestTarget target) {
