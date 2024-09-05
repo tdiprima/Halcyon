@@ -152,7 +152,7 @@ export function screenCapture(renderer) {
   });
 }
 
-export function removeObject(obj) {
+export function removeObject(obj, scene) {
   if (obj.parent) {
     obj.parent.remove(obj); // Ensure the object is removed from its parent
   } else {

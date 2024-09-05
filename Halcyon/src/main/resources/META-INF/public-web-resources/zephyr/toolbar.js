@@ -42,11 +42,12 @@ export function toolbar(scene, camera, renderer, controls, originalZ) {
   ruler(scene, camera, renderer, controls);
   screenCapture(renderer);
   crosshairs(scene, camera);
-  // rectangle(scene, camera, renderer, controls, {
-  //   button: "<i class=\"fa fa-bar-chart\"></i>",
-  //   color: 0xff7900,
-  //   select: true
-  // });
+  rectangle(scene, camera, renderer, controls, {
+    // button: "<i class=\"fa fa-bar-chart\"></i>",
+    button: "<i class=\"fas fa-crop-alt\"></i>",
+    color: "#ff7900",
+    select: true
+  });
   save(scene);
   fetchAnnotations(scene);
   lockRotate(controls);

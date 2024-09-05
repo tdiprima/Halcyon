@@ -52,7 +52,7 @@ export function rectangle(scene, camera, renderer, controls, options) {
 
   function setMaterial() {
     ({ color, type } = getColorAndType());
-    if (options.select && options.select === "selection") {
+    if (options.select) {
       material = new THREE.LineBasicMaterial({ color: options.color, linewidth: 5 });
     } else {
       material = new THREE.LineBasicMaterial({ color, linewidth: 5 });
@@ -85,7 +85,7 @@ export function rectangle(scene, camera, renderer, controls, options) {
 
       if (options.select) {
         getIIIF();
-        removeObject(currentRectangle);
+        removeObject(currentRectangle, scene);
       } else {
         const line = convertLineLoopToLine(currentRectangle, "rectangle", type);
         scene.add(line);
@@ -122,7 +122,7 @@ export function rectangle(scene, camera, renderer, controls, options) {
 
       if (options.select) {
         getIIIF();
-        removeObject(currentRectangle);
+        removeObject(currentRectangle, scene);
       } else {
         const line = convertLineLoopToLine(currentRectangle, "rectangle", type);
         scene.add(line);
