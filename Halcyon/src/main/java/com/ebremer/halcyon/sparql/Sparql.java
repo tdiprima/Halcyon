@@ -13,20 +13,19 @@ import org.apache.wicket.request.resource.JavaScriptResourceReference;
  *
  * @author erich
  */
-
 //reference https://triply.cc/docs/yasgui-api
-
 public class Sparql extends BasePage {
-    
-    public Sparql() {}
-    
+
+    public Sparql() {
+    }
+
     @Override
     public void renderHead(IHeaderResponse response) {
         super.renderHead(response);
         response.render(CssHeaderItem.forReference(new CssResourceReference(Sparql.class, "yasgui.min.css")));
         response.render(JavaScriptHeaderItem.forReference(new JavaScriptResourceReference(Sparql.class, "yasgui.min.js")));
         HalcyonSession hs = HalcyonSession.get();
-        HalcyonPrincipal hp = hs.getHalcyonPrincipal();        
-        response.render(JavaScriptHeaderItem.forScript("var token = '"+hp.getToken()+"'; var useriri = '"+hp.getUserURI()+"'; var userName = '"+hp.getPreferredUserName()+"';", "token"));
+        HalcyonPrincipal hp = hs.getHalcyonPrincipal();
+        response.render(JavaScriptHeaderItem.forScript("var token = '" + hp.getToken() + "'; var useriri = '" + hp.getUserURI() + "'; var userName = '" + hp.getPreferredUserName() + "';", "token"));
     }
 }

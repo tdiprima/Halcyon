@@ -51,6 +51,7 @@ public class EditCollection extends BasePage {
         Dataset ds = DatabaseLocator.getDatabase().getDataset();
         Model mmm = ModelFactory.createDefaultModel();
         ds.begin(ReadWrite.READ);
+
         Statement titleStmt = ds.getNamedModel(HAL.CollectionsAndResources).getProperty(container, DCTerms.title);
         if (titleStmt != null) {
             mmm.add(titleStmt);
@@ -58,15 +59,12 @@ public class EditCollection extends BasePage {
             // Provide a default value if the title is missing
             Literal defaultTitle = mmm.createLiteral("Untitled Collection");
             mmm.add(container, DCTerms.title, defaultTitle);
-
-            // Or use the UUID as a title
-            // mmm.add(container, DCTerms.title, mmm.createLiteral(uuid));
-            // System.out.println("Title property not found for container: " + uuid);
         }
-
         ds.end();
+
         mod = new RDFDetachableModel(mmm);
         LDModel ldm = new LDModel(mod);
+
         Form form = new Form("yayaya", ldm);
         form.add(new RDFTextField<String>("ContainerName", container, DCTerms.title));
         form.add(new Button("saveButton2") {
@@ -92,16 +90,17 @@ public class EditCollection extends BasePage {
                 }
                 setResponsePage(Collections.class);
             }
-        }.setDefaultFormProcessing(true)
-        );
+        }.setDefaultFormProcessing(true));
         form.add(new Button("resetButton") {
             @Override
             public void onSubmit() {
-                setResponsePage(EditCollection.class);
+                PageParameters parameters = new PageParameters();
+                parameters.add("container", uuid); // Pass the uuid again
+                setResponsePage(EditCollection.class, parameters);
             }
-        }.setDefaultFormProcessing(false)
-        );
+        }.setDefaultFormProcessing(false));
         add(form);
+
         List<IColumn<Solution, String>> columns = new ArrayList<>();
         columns.add(new AbstractColumn<Solution, String>(org.apache.wicket.model.Model.of("Access")) {
             @Override
@@ -121,6 +120,7 @@ public class EditCollection extends BasePage {
             }
         });
         columns.add(new NodeColumn<>(org.apache.wicket.model.Model.of("Name"), "name", "name"));
+
         ParameterizedSparqlString pss = new ParameterizedSparqlString(
             """
             select ?s ?name (count(distinct ?aclRead) as ?numRead) (count(distinct ?aclWrite) as ?numWrite)
@@ -135,12 +135,19 @@ public class EditCollection extends BasePage {
         );
         pss.setNsPrefix("so", SchemaDO.NS);
         pss.setIri("GroupsAndUsers", HAL.GroupsAndUsers.getURI());
-        pss.setIri("item", uuid);
+        if (uuid != null) {
+            pss.setIri("item", uuid);
+        } else {
+            // Throwing an IllegalArgumentException when uuid is null
+            throw new IllegalArgumentException("UUID is null, cannot set IRI");
+        }
         pss.setNsPrefix("wac", WAC.NS);
         pss.setIri("SecurityGraph", HAL.SecurityGraph.getURI());
         System.out.println(pss.toString());
+
         SelectDataProvider rdfsdf = new SelectDataProvider(ds, pss.toString());
         rdfsdf.SetSPARQL(pss.toString());
+
         AjaxFallbackDefaultDataTable table = new AjaxFallbackDefaultDataTable<>("table", columns, rdfsdf, 35);
         add(table);
     }

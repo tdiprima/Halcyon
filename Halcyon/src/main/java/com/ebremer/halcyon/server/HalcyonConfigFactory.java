@@ -9,25 +9,43 @@ import org.pac4j.core.config.Config;
 import org.pac4j.core.config.ConfigFactory;
 import org.pac4j.core.matching.matcher.PathMatcher;
 import org.pac4j.oidc.client.KeycloakOidcClient;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.pac4j.oidc.exceptions.OidcTokenException;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * Configures and builds security settings for the application.
+ */
 @Configuration
 public class HalcyonConfigFactory implements ConfigFactory {
-    
+
+    private static final Logger logger = LoggerFactory.getLogger(HalcyonConfigFactory.class);
+
     @Autowired
-    KeycloakOidcClient keycloakclient;  
-    
+    KeycloakOidcClient keycloakclient;
+
     @Override
     public Config build(final Object... parameters) {
-        keycloakclient.setProfileCreator(new HalcyonProfileCreator());
-        final Clients clients = new Clients(HalcyonSettings.getSettings().getProxyHostName()+"/callback", keycloakclient);
-        final Config config = new Config(clients);        
-        config.addAuthorizer("admin", new RequireAnyRoleAuthorizer("ROLE_ADMIN"));
-        config.addAuthorizer("custom", new CustomAuthorizer());
-        config.addAuthorizer("mustBeAnon", new IsAnonymousAuthorizer("/?mustBeAnon"));
-        config.addAuthorizer("mustBeAuth", new IsAuthenticatedAuthorizer("/?mustBeAuth"));
-        config.addMatcher("excludedPath", new PathMatcher().excludeRegex("^/callback$"));
-        return config;
+        try {
+            keycloakclient.setProfileCreator(new HalcyonProfileCreator());
+            final Clients clients = new Clients(HalcyonSettings.getSettings().getProxyHostName() + "/callback", keycloakclient);
+            final Config config = new Config(clients);
+
+            config.addAuthorizer("admin", new RequireAnyRoleAuthorizer("ROLE_ADMIN"));
+            config.addAuthorizer("custom", new CustomAuthorizer());
+            config.addAuthorizer("mustBeAnon", new IsAnonymousAuthorizer("/?mustBeAnon"));
+            config.addAuthorizer("mustBeAuth", new IsAuthenticatedAuthorizer("/?mustBeAuth"));
+            config.addMatcher("excludedPath", new PathMatcher().excludeRegex("^/callback$"));
+
+            return config;
+        } catch (OidcTokenException e) {
+            logger.error("Error while setting up Keycloak OIDC client: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to configure Keycloak OIDC client", e);
+        } catch (Exception e) {
+            logger.error("Unexpected error while building the config: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to build the config", e);
+        }
     }
 }
