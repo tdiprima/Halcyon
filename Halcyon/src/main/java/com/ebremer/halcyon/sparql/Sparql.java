@@ -24,8 +24,33 @@ public class Sparql extends BasePage {
         super.renderHead(response);
         response.render(CssHeaderItem.forReference(new CssResourceReference(Sparql.class, "yasgui.min.css")));
         response.render(JavaScriptHeaderItem.forReference(new JavaScriptResourceReference(Sparql.class, "yasgui.min.js")));
+
         HalcyonSession hs = HalcyonSession.get();
         HalcyonPrincipal hp = hs.getHalcyonPrincipal();
-        response.render(JavaScriptHeaderItem.forScript("var token = '" + hp.getToken() + "'; var useriri = '" + hp.getUserURI() + "'; var userName = '" + hp.getPreferredUserName() + "';", "token"));
+
+        String tokenScript = String.format(
+                "var token = '%s';"
+                + "var useriri = '%s';"
+                + "var userName = '%s';"
+                + "function isTokenExpired(token) {"
+                + "    const base64Url = token.split('.')[1];"
+                + "    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');"
+                + "    const decodedToken = JSON.parse(window.atob(base64));"
+                + "    const expirationTime = decodedToken.exp * 1000;"
+                + "    return Date.now() > expirationTime;"
+                + "}"
+                + "function checkToken() {"
+                + "    if (isTokenExpired(token)) {"
+                + "        alert('Your session has expired. Please log in again.');"
+                + "        window.location.href = '/invalidateSession';"
+                + "    }"
+                + "}"
+                + "setInterval(checkToken, 60000);", // Check every minute
+                hp.getToken(),
+                hp.getUserURI(),
+                hp.getPreferredUserName()
+        );
+
+        response.render(JavaScriptHeaderItem.forScript(tokenScript, "token-check"));
     }
 }

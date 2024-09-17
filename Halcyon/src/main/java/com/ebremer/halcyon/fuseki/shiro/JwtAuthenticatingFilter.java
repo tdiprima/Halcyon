@@ -13,39 +13,42 @@ import org.apache.shiro.web.util.WebUtils;
 
 public class JwtAuthenticatingFilter extends AuthenticatingFilter {
 
+    private static final Logger logger = Logger.getLogger(JwtAuthenticatingFilter.class.getName());
+
     @Override
     protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) throws Exception {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         String jwt = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
-        if (jwt!=null) {
-            if (jwt.substring(0, "Bearer ".length()).equals("Bearer ")) {
-                jwt = jwt.substring("Bearer ".length(), jwt.length());
-                return new JwtToken(jwt);
+        try {
+            if (jwt != null) {
+                if (jwt.substring(0, "Bearer ".length()).equals("Bearer ")) {
+                    jwt = jwt.substring("Bearer ".length(), jwt.length());
+                    return new JwtToken(jwt);
+                }
             }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error extracting JWT: {0}", e.getMessage());
         }
-        return null;
+
+        return null; // No valid token found
     }
 
     @Override
     protected boolean onAccessDenied(ServletRequest request, ServletResponse response) {
         boolean loggedIn = false;
-        try {            
-            //JEEContext context = new JEEContext((HttpServletRequest) request, (HttpServletResponse) response);
-            //ProfileManager profileManager = new ProfileManager(context, new JEESessionStore());
-            //Optional<UserProfile> profile = profileManager.getProfile();
-            //boolean hahahha = profile.isPresent();
+        try {
             loggedIn = executeLogin(request, response);
         } catch (IllegalStateException ex) {
-            System.out.println(ex.getMessage());
+            logger.log(Level.SEVERE, "Invalid JWT: {0}", ex.getMessage());
         } catch (Exception ex) {
-            Logger.getLogger(JwtAuthenticatingFilter.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, "Unexpected error: {0}", ex.getMessage());
         }
         return loggedIn || sendChallenge(response);
     }
-    
+
     private boolean sendChallenge(ServletResponse response) {
         HttpServletResponse httpResponse = WebUtils.toHttp(response);
-        httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        return false;
+        httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // Set status to 401
+        return false; // Challenge was sent, return false
     }
 }
