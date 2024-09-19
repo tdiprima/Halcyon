@@ -31,6 +31,7 @@ import com.ebremer.halcyon.fuseki.SPARQLEndPoint;
 import com.ebremer.halcyon.lib.OperatingSystemInfo;
 import com.ebremer.halcyon.lib.spatial.Spatial;
 import com.ebremer.halcyon.server.ldp.LDPServer;
+import com.ebremer.halcyon.sparql.InvalidateSessionServlet;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.Servlet;
 import java.util.Iterator;
@@ -53,19 +54,20 @@ import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 @SpringBootApplication(exclude = LiquibaseAutoConfiguration.class)
-@Import( {KeycloakServer.class})
+@Import({KeycloakServer.class})
 @EnableConfigurationProperties(KeycloakServer.class)
-@ConfigurationPropertiesScan({ "com.ebremer.halcyon.server"})
+@ConfigurationPropertiesScan({"com.ebremer.halcyon.server"})
 public class Main {
+
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private final KeycloakServer properties;
-    
+
     @Autowired
     private DefaultSslBundleRegistry defaultSslBundleRegistry;
-        
+
     @Autowired
     private KeycloakOidcConfiguration keycloakOidcConfiguration;
-        
+
     @Autowired
     public Main(KeycloakServer properties) {
         this.properties = properties;
@@ -74,36 +76,36 @@ public class Main {
 
     @Autowired
     private DataSource dataSource;
-    
+
     @PostConstruct
     public void init() {
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
     }
-    
+
     @Bean(name = "xapp")
     @Order(Ordered.HIGHEST_PRECEDENCE)
     @Lazy(false)
     @DependsOn("keycloakServer")
     ServletRegistrationBean<HttpServlet30Dispatcher> keycloakJaxRsApplication() throws Exception {
-        System.out.println("Add Keycloak Server Filter..."+properties);
+        System.out.println("Add Keycloak Server Filter..." + properties);
         final var servlet = new ServletRegistrationBean<HttpServlet30Dispatcher>(new HttpServlet30Dispatcher());
         servlet.addInitParameter("jakarta.ws.rs.Application", App.class.getName());
         servlet.addInitParameter(ResteasyContextParameters.RESTEASY_SERVLET_MAPPING_PREFIX, properties.getContextPath());
         servlet.addInitParameter(ResteasyContextParameters.RESTEASY_USE_CONTAINER_FORM_PARAMS, "true");
-        servlet.addUrlMappings(properties.getContextPath()+ "/*");
+        servlet.addUrlMappings(properties.getContextPath() + "/*");
         servlet.setLoadOnStartup(0);
         servlet.setAsyncSupported(true);
         return servlet;
     }
-    
+
     @Bean
     MultipartResolver multipartResolver() {
         return new StandardServletMultipartResolver();
     }
-    
+
     @Bean(name = "keycloakSessionManagement")
-    @Order(Ordered.HIGHEST_PRECEDENCE)	
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     FilterRegistrationBean<RequestFilter> keycloakSessionManagement() {
         System.out.println("Add Keycloak Session Management Filter...");
         final var filter = new FilterRegistrationBean<RequestFilter>();
@@ -113,26 +115,26 @@ public class Main {
         filter.addUrlPatterns(properties.getContextPath() + "/*");
         return filter;
     }
-    
+
     @Bean
     public KeycloakOidcConfiguration keycloakOidcConfiguration() {
         KeycloakOidcConfiguration config = new KeycloakOidcConfiguration();
         config.setClientId("account");
         config.setRealm("Halcyon");
-        config.setBaseUri(HalcyonSettings.getSettings().getProxyHostName()+"/auth");  
+        config.setBaseUri(HalcyonSettings.getSettings().getProxyHostName() + "/auth");
         if (HalcyonSettings.getSettings().isHTTPS2enabled()) {
             config.setSslSocketFactory(defaultSslBundleRegistry.getBundle("server").createSslContext().getSocketFactory());
         }
         return config;
     }
-    
+
     @Bean
     public KeycloakOidcClient keycloakOidcClient() {
         return new KeycloakOidcClient(keycloakOidcConfiguration);
     }
 
     @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE)	
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @ConditionalOnMissingBean(name = "springBootPlatform")
     protected SimplePlatformProvider springBootPlatform() {
         return (SimplePlatformProvider) Platform.getPlatform();
@@ -140,7 +142,7 @@ public class Main {
 
     @Lazy(true)
     @Bean
-    ServletRegistrationBean ImageServerRegistration () {
+    ServletRegistrationBean ImageServerRegistration() {
         ServletRegistrationBean srb = new ServletRegistrationBean();
         srb.setLoadOnStartup(3);
         srb.setOrder(Ordered.HIGHEST_PRECEDENCE + 3);
@@ -148,10 +150,10 @@ public class Main {
         srb.setUrlMappings(Arrays.asList("/iiif/*"));
         return srb;
     }
-    
+
     @Lazy(true)
     @Bean
-    ServletRegistrationBean RaptorServerRegistration () {
+    ServletRegistrationBean RaptorServerRegistration() {
         ServletRegistrationBean srb = new ServletRegistrationBean();
         srb.setLoadOnStartup(3);
         srb.setOrder(Ordered.HIGHEST_PRECEDENCE + 4);
@@ -159,22 +161,33 @@ public class Main {
         srb.setUrlMappings(Arrays.asList("/raptor/*"));
         return srb;
     }
-    
+
+    @Lazy(true)
+    @Bean
+    ServletRegistrationBean InvalidateSessionRegistration() {
+        ServletRegistrationBean srb = new ServletRegistrationBean();
+        srb.setLoadOnStartup(3);
+        srb.setOrder(Ordered.HIGHEST_PRECEDENCE + 5);
+        srb.setServlet(new InvalidateSessionServlet());
+        srb.setUrlMappings(Arrays.asList("/invalidateSession/*"));
+        return srb;
+    }
+
     @Bean
     public ServletRegistrationBean proxyServletRegistrationBean() {
         HalcyonSettings settings = HalcyonSettings.getSettings();
         ServletRegistrationBean bean = new ServletRegistrationBean(new HalcyonProxyServlet(), "/rdf/*");
-        bean.addInitParameter("targetUri", "http://localhost:"+settings.GetSPARQLPort()+"/rdf");
+        bean.addInitParameter("targetUri", "http://localhost:" + settings.GetSPARQLPort() + "/rdf");
         bean.addInitParameter(ProxyServlet.P_PRESERVECOOKIES, "true");
         bean.addInitParameter(ProxyServlet.P_HANDLEREDIRECTS, "true");
         bean.setOrder(5);
         return bean;
     }
-    
+
     @Bean
-    public FilterRegistrationBean<CustomFilter> KeycloakOIDCFilterFilterRegistration(){
+    public FilterRegistrationBean<CustomFilter> KeycloakOIDCFilterFilterRegistration() {
         FilterRegistrationBean<CustomFilter> registration = new FilterRegistrationBean<>();
-	registration.setFilter(new CustomFilter());
+        registration.setFilter(new CustomFilter());
         registration.addUrlPatterns("/*");
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 2);
         return registration;
@@ -190,10 +203,10 @@ public class Main {
         ServicesLoader.init();
         FileReaderFactoryProvider.init(Main.class.getClassLoader());
         Iterator<javax.imageio.ImageReader> readers = ImageIO.getImageReadersByFormatName("tif");
-        readers.forEachRemaining(rr->{
-            System.out.println("MAIN LOAD TIF READERS : "+rr.getClass().toGenericString());
+        readers.forEachRemaining(rr -> {
+            System.out.println("MAIN LOAD TIF READERS : " + rr.getClass().toGenericString());
         });
-        
+
         Spatial.init();
         SpringApplicationBuilder sab = new SpringApplicationBuilder(Main.class);
         sab.initializers(new ServletInitializer());
@@ -204,38 +217,39 @@ public class Main {
         app.run(args);
         System.out.println("===================== Welcome to Halcyon!");
     }
-    
+
     static class ServletInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
         @Override
         public void initialize(ConfigurableApplicationContext applicationContext) {
-            HalcyonSettings.getSettings().GetResourceHandlers().forEach(rh->{
+            HalcyonSettings.getSettings().GetResourceHandlers().forEach(rh -> {
                 ServletRegistrationBean<Servlet> srb = new ServletRegistrationBean();
                 srb.setLoadOnStartup(3);
-                String name = "LDP "+UUID.randomUUID().toString();
+                String name = "LDP " + UUID.randomUUID().toString();
                 srb.setBeanName(name);
                 srb.setOrder(Ordered.HIGHEST_PRECEDENCE + 4);
                 if (OperatingSystemInfo.ifWindows()) {
                     srb.addInitParameter("resourceBase", rh.resourceBase().getPath().substring(1));
-                    System.out.println("Add Path --> "+rh.urlPath()+"  "+rh.resourceBase().getPath().substring(1));
+                    System.out.println("Add Path --> " + rh.urlPath() + "  " + rh.resourceBase().getPath().substring(1));
                 } else {
                     srb.addInitParameter("resourceBase", rh.resourceBase().getPath());
-                    System.out.println("Add Path --> "+rh.urlPath()+"  "+rh.resourceBase().getPath());
+                    System.out.println("Add Path --> " + rh.urlPath() + "  " + rh.resourceBase().getPath());
                 }
                 srb.addInitParameter("dirAllowed", "true");
                 srb.setServlet(new LDPServer());
-                srb.setUrlMappings(Arrays.asList(rh.urlPath()+"*"));
+                srb.setUrlMappings(Arrays.asList(rh.urlPath() + "*"));
                 applicationContext.getBeanFactory().registerSingleton(name, srb);
             });
             ServletRegistrationBean<Servlet> srb = new ServletRegistrationBean();
-                srb.setLoadOnStartup(3);
-                String name = "LDP "+UUID.randomUUID().toString();
-                srb.setBeanName(name);
-                srb.setOrder(Ordered.HIGHEST_PRECEDENCE + 4);
-                srb.addInitParameter("resourceBase", "D:/HalcyonStorage/users/");
-                srb.addInitParameter("dirAllowed", "true");
-                srb.setServlet(new LDPServer());
-                srb.setUrlMappings(Arrays.asList("/users/*"));
-                applicationContext.getBeanFactory().registerSingleton(name, srb);
+            srb.setLoadOnStartup(3);
+            String name = "LDP " + UUID.randomUUID().toString();
+            srb.setBeanName(name);
+            srb.setOrder(Ordered.HIGHEST_PRECEDENCE + 4);
+            srb.addInitParameter("resourceBase", "D:/HalcyonStorage/users/");
+            srb.addInitParameter("dirAllowed", "true");
+            srb.setServlet(new LDPServer());
+            srb.setUrlMappings(Arrays.asList("/users/*"));
+            applicationContext.getBeanFactory().registerSingleton(name, srb);
         }
-    }    
+    }
 }

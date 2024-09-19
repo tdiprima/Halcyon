@@ -5,9 +5,13 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import java.security.PublicKey;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 public class JwtVerifier {
+
     private final PublicKey publicKey;
+    private static final Logger logger = Logger.getLogger(JwtVerifier.class.getName());
 
     public JwtVerifier(PublicKey publicKey) {
         this.publicKey = publicKey;
@@ -15,19 +19,18 @@ public class JwtVerifier {
 
     public Claims verify(String token) {
         try {
-            JwtParser p = Jwts.parserBuilder()
-                .setAllowedClockSkewSeconds(86400)
-                .setSigningKey(publicKey)
-                .build();
-                Jws<Claims> claimx = p.parseClaimsJws(token);
-            return claimx.getBody();
+            JwtParser parser = Jwts.parserBuilder()
+                    .setAllowedClockSkewSeconds(30)  // Allow some clock skew
+                    .setSigningKey(publicKey)
+                    .build();
+            Jws<Claims> claimsJws = parser.parseClaimsJws(token);
+            return claimsJws.getBody();
         } catch (io.jsonwebtoken.ExpiredJwtException ex) {
-            System.out.println("ARRRGGGG JWT expired!!!!");
-        }  catch (io.jsonwebtoken.security.SignatureException ex) {
-            System.out.println(ex.getMessage());
+            logger.log(Level.SEVERE, "JWT expired: {0}", ex.getMessage());
+        } catch (io.jsonwebtoken.security.SignatureException ex) {
+            logger.log(Level.SEVERE, "Invalid signature: {0}", ex.getMessage());
         }
         //return new DefaultClaims();
-        System.out.println("FAIL!!!!");
         return null;
     }
 }

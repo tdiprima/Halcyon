@@ -83,11 +83,9 @@ public class PredicateObject extends Panel implements IMarkupResourceStreamProvi
                 image.add(AttributeModifier.replace("width", "25"));
                 image.add(AttributeModifier.replace("height", "25"));
                 deleteButton.add(image);
-            } else {
-                // It should still function as a clickable element.
-                logger.log(Level.WARNING, "Image {0} not found", img);
             }
         } catch (Exception ex) {
+            // It should still function as a clickable element.
             logger.log(Level.SEVERE, ex.getMessage());
         }
 

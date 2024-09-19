@@ -17,6 +17,7 @@ public class URLControl {
             "/about",
             "/iiif*/",
             "/sparql",
+            "/invalidateSession",
             "/revisionhistory",
             "/collections"};
         return secured;
@@ -28,6 +29,7 @@ public class URLControl {
             "/ldp",
             "/HalcyonStorage",
             "/raptor",
+            "/invalidateSession",
             "/callback",
             "/h2",
             "/skunkworks/",
