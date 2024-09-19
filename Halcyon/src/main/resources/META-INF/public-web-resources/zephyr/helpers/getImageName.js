@@ -15,6 +15,7 @@ export function getImageName(scene) {
         // const firstPart = parts[0];
         const textNode = document.createTextNode(imageName.toString());
         const divElement = document.createElement("div");
+        divElement.id = "imageNameDiv";
         divElement.style.display = "inline-block";
         divElement.style.paddingLeft = "10px";
         divElement.appendChild(textNode);

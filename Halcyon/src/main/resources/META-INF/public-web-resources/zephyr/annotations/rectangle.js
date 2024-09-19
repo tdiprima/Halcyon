@@ -4,6 +4,9 @@ import { getMousePosition } from "../helpers/mouse.js";
 import { worldToImageCoordinates, getUrl, convertLineLoopToLine } from "../helpers/conversions.js";
 import { getColorAndType } from "../helpers/colorPalette.js";
 
+/**
+ * Draw a rectangle, or use the rectangle to select a tile for analysis.
+ */
 export function rectangle(scene, camera, renderer, controls, options) {
   const canvas = renderer.domElement;
   let isDrawing = false;

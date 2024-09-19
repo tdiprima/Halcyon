@@ -68,8 +68,34 @@
     ZEPHYR.CreateImageViewer(renderer, scene, options.target, 0);
     ZEPHYR.CreateFeatureViewer(renderer, scene, "https://localhost:8888/iiif/?iiif=https://localhost:8888/ldp/nuclearsegmentation2019/coad/TCGA-CM-5348-01Z-00-DX1.2ad0b8f6-684a-41a7-b568-26e97675cce9.zip", 0);
 
-    // Annotation tools
-    toolbar(scene, camera, renderer, controls, originalZ);
+    // JSON config, in practice this would be fetched from the server
+    const config = {
+      toolbarEnabled: true,
+      tools: {
+        colorPalette: { enabled: true },
+        freeDrawing: { enabled: true },
+        rectangle: { enabled: true },
+        rectangleAlt: { enabled: false },
+        ellipse: { enabled: true },
+        polygon: { enabled: true },
+        hollowBrush: { enabled: true },
+        grid: { enabled: true },
+        edit: { enabled: true },
+        label: { enabled: true },
+        ruler: { enabled: true },
+        screenCapture: { enabled: true },
+        crosshairs: { enabled: true },
+        save: { enabled: true },
+        fetchAnnotations: { enabled: true },
+        zoomControl: { enabled: true },
+        brightContrast: { enabled: true },
+        getImageName: { enabled: true }
+      }
+    };
+
+    // Initialize toolbar with config
+    toolbar(scene, camera, renderer, controls, originalZ, config);
+
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
