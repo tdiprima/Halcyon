@@ -132,9 +132,9 @@ function timeStamp() {
  */
 export function screenCapture(renderer) {
   let downloadButton = createButton({
-    id: "download",
+    id: "screenCapture",
     innerHtml: "<i class=\"fas fa-camera\"></i>",
-    title: "Download"
+    title: "Screen Capture"
   });
 
   downloadButton.addEventListener('click', () => {
@@ -207,4 +207,25 @@ export function displayAreaAndPerimeter(area, perimeter) {
   div.appendChild(closeButton);
   document.body.appendChild(div);
   // console.log(area.toFixed(2), perimeter.toFixed(2));
+}
+
+export function findObjectsByName(object, name) {
+  let result = [];
+
+  // Define a recursive function to traverse the scene graph
+  function traverse(obj) {
+    if (obj.name === name) {
+      result.push(obj);
+    }
+
+    // Recursively search for children
+    for (let i = 0; i < obj.children.length; i++) {
+      traverse(obj.children[i]);
+    }
+  }
+
+  // Start the traversal from the root object
+  traverse(object);
+
+  return result;
 }

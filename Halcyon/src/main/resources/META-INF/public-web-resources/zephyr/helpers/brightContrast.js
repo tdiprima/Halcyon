@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createSlider, createButton } from "./elements.js";
+import { createSlider, createButton, findObjectsByName } from "./elements.js";
 
 /**
  * Function to handle brightness and contrast adjustment for a 3D scene.
@@ -57,30 +57,6 @@ export function brightContrast(scene) {
         }
       }
     });
-  }
-
-  /**
-   * Recursively searches for objects in the scene with the specified name and returns them in an array.
-   *
-   * @param {Object3D} object - The root object to start the search from.
-   * @param {string} name - The name of the objects to search for.
-   * @return {Object3D[]} An array of objects with the specified name.
-   */
-  function findObjectsByName(object, name) {
-    let result = [];
-
-    function traverse(obj) {
-      if (obj.name === name) {
-        result.push(obj);
-      }
-
-      for (let i = 0; i < obj.children.length; i++) {
-        traverse(obj.children[i]);
-      }
-    }
-
-    traverse(object);
-    return result;
   }
 
   /**

@@ -3,7 +3,7 @@ import { createButton } from "./elements.js";
 export function zoomControl(camera, controls, originalZ) {
   // Create the select element (dropdown)
   const dropdown = document.createElement('select');
-  dropdown.id = 'zoomLevel';
+  dropdown.id = 'zoomControl';
   dropdown.style.marginRight = '2px';
 
   // Option values and text
@@ -56,9 +56,9 @@ export function zoomControl(camera, controls, originalZ) {
   });
 }
 
-export function lockRotate(controls) {
+export function lockRotation(controls) {
   let lockButton = createButton({
-    id: "rotation",
+    id: "lockRotation",
     innerHtml: "<i class=\"fa-solid fa-rotate\"></i>",
     title: "Lock Rotation"
   });
@@ -84,7 +84,7 @@ export function lockRotate(controls) {
 export function resetCamera(controls) {
   // Reset the camera position
   let button = createButton({
-    id: "resetButton",
+    id: "resetCamera",
     innerHtml: "<i class=\"fa-solid fa-compass\"></i>",
     title: "Reset View"
   });

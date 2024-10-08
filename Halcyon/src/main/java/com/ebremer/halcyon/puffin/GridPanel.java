@@ -17,11 +17,11 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.request.resource.ContextRelativeResource;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import org.apache.wicket.request.resource.PackageResourceReference;
 
 /**
  *
@@ -77,19 +77,17 @@ public class GridPanel extends Panel implements IMarkupResourceStreamProvider {
             String img = "images/minus.png";
 
             try {
-                ContextRelativeResource ha = new ContextRelativeResource(img);
-                if (ha.getResourceStream() != null) {
-                    Image image = new Image("buttonImage", ha);
-                    image.add(AttributeModifier.replace("width", "25"));
-                    image.add(AttributeModifier.replace("height", "25"));
-                    imageButton.add(image);
-                }
+                PackageResourceReference imgResourceRef = new PackageResourceReference(getClass(), img);
+                Image image = new Image("buttonImage", imgResourceRef);
+                image.add(AttributeModifier.replace("width", "25"));
+                image.add(AttributeModifier.replace("height", "25"));
+                imageButton.add(image);
             } catch (Exception ex) {
-                // It should still function as a clickable element.
                 logger.log(Level.SEVERE, ex.getMessage());
             }
 
             add(imageButton);
+
         }
     }
 }

@@ -2,7 +2,7 @@ export function colorPalette() {
   // Create the container for the custom dropdown
   let paletteContainer = document.createElement('div');
   paletteContainer.className = 'dd';  // Apply the dropdown class for styling
-  paletteContainer.id = 'colorPalette';    // Set the ID if needed
+  paletteContainer.id = 'colorPalette';
 
   // Insert the container before the canvas element
   document.body.insertBefore(paletteContainer, document.querySelector('canvas'));
@@ -10,7 +10,8 @@ export function colorPalette() {
   if (!window.useriri) {
     buildColorPalette(paletteContainer);
   } else {
-    fetch(`${window.useriri.replace("user", "users")}/colorclasses`, {
+    const url = `${window.useriri.replace("user", "users")}/colorclasses`;
+    fetch(url, {
       method: 'GET',
       headers: {
         'Accept': 'application/ld+json',
@@ -28,6 +29,7 @@ export function colorPalette() {
       })
       .catch(error => {
         console.error('There was a problem with the fetch operation:', error);
+        console.error(url);
         buildColorPalette(paletteContainer);
       });
   }
